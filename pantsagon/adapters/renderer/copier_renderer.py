@@ -10,6 +10,7 @@ class CopierRenderer:
                 str(request.pack_path),
                 str(request.staging_dir),
                 data=request.answers,
+                skip_if_exists=("**/*",),
                 unsafe=request.allow_hooks,
             )
         except Exception as e:  # Copier raises various exceptions

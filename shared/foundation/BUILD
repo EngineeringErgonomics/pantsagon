@@ -1,14 +1,19 @@
-__dependents_rules__ = [{"type": "*"}]
+__dependents_rules__(
+  ("*", "*"),
+)
+
+__dependencies_rules__(
+  ("*", "//shared/foundation/**", "!*"),
+)
 
 python_sources(
   name="lib",
+  sources=["src/**/*.py"],
   tags=["shared:foundation"],
-  __dependencies_rules__=[
-    {"path": "shared/foundation/src/**"},
-  ],
 )
 
 python_tests(
   name="tests",
+  sources=["tests/**/*.py"],
   dependencies=[":lib"],
 )

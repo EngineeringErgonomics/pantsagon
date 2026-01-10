@@ -1,0 +1,112 @@
+name: Docs
+
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
+      - "schemas/**"
+      - "scripts/**"
+      - "pantsagon/diagnostics/codes.yaml"
+  push:
+    branches: ["main"]
+    tags: ["v*.*.*"]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
+      - "schemas/**"
+      - "scripts/**"
+      - "pantsagon/diagnostics/codes.yaml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install docs dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+
+      - name: Install generator dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Generate reference docs (schemas + diagnostic codes)
+        run: |
+          python scripts/generate_schema_docs.py
+          python scripts/generate_diagnostic_codes.py
+
+      - name: Fail if generated docs are out of date
+        run: |
+          git diff --exit-code
+
+      - name: Build (strict)
+        run: |
+          mkdocs build --strict
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Publish PR preview
+        if: github.event_name == 'pull_request'
+        env:
+          PR_NUM: ${{ github.event.number }}
+        run: |
+          mike deploy --push --branch gh-pages "pr-${PR_NUM}"
+
+      - name: Comment PR preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const url = `https://${owner}.github.io/${repo}/pr-${pr}/`;
+            const body = [
+              "Docs preview published:",
+              "",
+              url
+            ].join("\n");
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pr,
+              body
+            });
+
+      - name: Publish dev docs (main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mike deploy --push --branch gh-pages "dev"
+
+      - name: Publish release docs (tag) + update latest
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          mike deploy --push --branch gh-pages --update-aliases "${TAG}" latest

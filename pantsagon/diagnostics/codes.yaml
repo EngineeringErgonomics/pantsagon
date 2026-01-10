@@ -24,3 +24,51 @@ codes:
     rule: pack.variables.default_mismatch
     message: Copier default does not match pack.yaml default.
     hint: Align defaults, or run in strict mode to fail builds.
+
+  - code: FEATURE_NAME_INVALID
+    severity: error
+    rule: naming.feature.format
+    message: Feature name format is invalid.
+    hint: Use lowercase kebab-case or snake_case with no dots.
+
+  - code: FEATURE_NAME_SHADOWS_PACK
+    severity: warn
+    rule: naming.feature.shadows_pack
+    message: Feature name shadows a pack id.
+    hint: Rename the feature to avoid confusion with pack identifiers.
+
+  - code: LOCK_INVALID
+    severity: error
+    rule: repo.lock.invalid
+    message: Repo lock (.pantsagon.toml) is invalid.
+    hint: Fix the TOML syntax or regenerate the repo lock with init.
+
+  - code: LOCK_MISSING
+    severity: error
+    rule: repo.lock.missing
+    message: Repo lock (.pantsagon.toml) is missing.
+    hint: Run init to create a new repo lock file.
+
+  - code: PACK_ID_INVALID
+    severity: error
+    rule: naming.pack.id
+    message: Pack id format is invalid.
+    hint: Use lowercase dot-namespaced ids (e.g. pantsagon.core).
+
+  - code: SERVICE_NAME_INVALID
+    severity: error
+    rule: naming.service.format
+    message: Service name format is invalid.
+    hint: Use lowercase kebab-case without leading, trailing, or doubled dashes.
+
+  - code: SERVICE_NAME_RESERVED
+    severity: error
+    rule: naming.service.reserved
+    message: Service name is reserved.
+    hint: Choose a different name or add project-level reserved names in .pantsagon.toml.
+
+  - code: VARIABLE_NAME_INVALID
+    severity: error
+    rule: naming.variable.format
+    message: Variable name format is invalid.
+    hint: Use a valid identifier (letters, numbers, underscore) starting with a letter or underscore.

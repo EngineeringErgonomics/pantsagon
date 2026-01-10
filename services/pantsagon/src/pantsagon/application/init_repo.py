@@ -110,6 +110,7 @@ def init_repo(
     service_name = services[0] if services else "service"
     answers = {"repo_name": repo_path.name, "service_name": service_name}
     resolved_packs = _order_packs_by_requires(resolved_packs)
+    resolved_pack_ids = {p["id"] for p in resolved_packs}
     lock: dict[str, Any] = {
         "tool": {"name": "pantsagon", "version": "0.1.0"},
         "settings": {
@@ -137,6 +138,12 @@ def init_repo(
     stage = workspace.begin_transaction()
     write_lock(stage / ".pantsagon.toml", lock)
     (stage / "pants.toml").write_text('[GLOBAL]\npants_version = "2.30.0"\n')
+    for service in services:
+        svc_root = stage / "services" / service
+        svc_root.mkdir(parents=True, exist_ok=True)
+        if "pantsagon.python" in resolved_pack_ids:
+            for layer in ("domain", "ports", "application", "adapters", "entrypoints"):
+                (svc_root / layer).mkdir(parents=True, exist_ok=True)
 
     workspace.commit(stage)
 

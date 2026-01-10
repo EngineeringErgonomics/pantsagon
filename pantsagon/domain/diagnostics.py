@@ -40,6 +40,7 @@ class Diagnostic:
     hint: str | None = None
     details: dict[str, Any] | None = None
     is_execution: bool = False
+    upgradeable: bool = False
     id: str = field(init=False)
 
     def __post_init__(self) -> None:

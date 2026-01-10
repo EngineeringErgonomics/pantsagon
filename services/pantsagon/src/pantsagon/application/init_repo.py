@@ -138,6 +138,7 @@ def init_repo(
     stage = workspace.begin_transaction()
     write_lock(stage / ".pantsagon.toml", lock)
     (stage / "pants.toml").write_text('[GLOBAL]\npants_version = "2.30.0"\n')
+    (stage / "README.md").write_text("Pantsagon Generated Repo\n")
     for service in services:
         svc_root = stage / "services" / service
         svc_root.mkdir(parents=True, exist_ok=True)

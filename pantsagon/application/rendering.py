@@ -12,7 +12,10 @@ from pantsagon.ports.renderer import RenderRequest
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[3]
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "packs").is_dir():
+            return parent
+    raise RuntimeError("Could not locate repo root")
 
 
 def _bundled_packs_root() -> Path:

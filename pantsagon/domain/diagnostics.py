@@ -31,6 +31,17 @@ class FileLocation(Location):
 
 
 @dataclass(frozen=True)
+class ValueLocation(Location):
+    field: str
+    value: str
+
+    def __init__(self, field: str, value: str):
+        object.__setattr__(self, "kind", "value")
+        object.__setattr__(self, "field", field)
+        object.__setattr__(self, "value", value)
+
+
+@dataclass(frozen=True)
 class Diagnostic:
     code: str
     rule: str

@@ -2,6 +2,8 @@ from pathlib import Path
 
 from pantsagon.domain.result import Result
 from pantsagon.domain.determinism import is_deterministic
+from pantsagon.application.rendering import render_bundled_packs
+from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
 
 
 def _minimal_toml(lock: dict) -> str:
@@ -33,9 +35,11 @@ def init_repo(
         content = tomli_w.dumps(lock)
     except ModuleNotFoundError:
         content = _minimal_toml(lock)
-    (repo_path / ".pantsagon.toml").write_text(content)
-    # Minimal core file for now; later replaced by rendered pack output.
-    (repo_path / "pants.toml").write_text("[GLOBAL]\npants_version = \"2.30.0\"\n")
+    workspace = FilesystemWorkspace(repo_path)
+    stage = workspace.begin_transaction()
+    render_bundled_packs(stage, repo_path, languages, services, features, allow_hooks=False)
+    (stage / ".pantsagon.toml").write_text(content)
+    workspace.commit(stage)
 
     augmented = augmented_coding or "none"
     if augmented == "agents":

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pantsagon.dev/schemas/result.schema.v1.json",
+  "title": "Pantsagon Result (v1)",
+  "description": "Structured output returned by Pantsagon commands for humans and machines.",
+  "type": "object",
+  "required": ["result_schema_version", "exit_code", "diagnostics"],
+  "additionalProperties": false,
+  "properties": {
+    "result_schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Schema version for the Result object."
+    },
+    "exit_code": {
+      "type": "integer",
+      "enum": [0, 2, 3, 4],
+      "description": "Process exit code."
+    },
+    "diagnostics": {
+      "type": "array",
+      "description": "Structured diagnostics emitted during execution.",
+      "items": {
+        "type": "object",
+        "required": ["code", "rule", "severity", "message"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable or deterministic diagnostic identifier."
+          },
+          "code": {
+            "type": "string",
+            "description": "Short, stable diagnostic code (e.g. PACK_NOT_FOUND)."
+          },
+          "rule": {
+            "type": "string",
+            "description": "Rule identifier or namespace (e.g. pack.requires.packs)."
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["error", "warn", "info"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "location": {
+            "type": "object",
+            "description": "Optional structured location of the diagnostic.",
+            "additionalProperties": true
+          },
+          "hint": {
+            "type": "string",
+            "description": "Optional remediation hint."
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Optional machine-readable details."
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "Artifacts produced by the command (paths, packs, commands).",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

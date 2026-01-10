@@ -9,3 +9,4 @@ def test_repo_layout_basics_exist() -> None:
     assert (root / "services/pantsagon/src/pantsagon/entrypoints/cli.py").exists()
     assert (root / "services/pantsagon/tests/packs/test_bundled_packs.py").exists()
     assert (root / "services/pantsagon/src/pantsagon/domain/BUILD").exists()
+    assert (root / "packs/BUILD").exists()

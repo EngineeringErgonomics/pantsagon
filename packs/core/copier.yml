@@ -1,0 +1,6 @@
+_min_copier_version: "9.0.0"
+_subdirectory: "templates"
+_templates_suffix: ".jinja"
+repo_name:
+  type: str
+  default: "repo"

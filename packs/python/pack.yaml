@@ -1,0 +1,7 @@
+schema_version: 1
+id: pantsagon.python
+version: 1.0.0
+description: Python service skeleton
+variables:
+  - name: service_name
+    type: string

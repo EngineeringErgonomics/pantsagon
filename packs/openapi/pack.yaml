@@ -1,0 +1,7 @@
+schema_version: 1
+id: pantsagon.openapi
+version: 1.0.0
+description: OpenAPI feature pack
+variables:
+  - name: service_name
+    type: string

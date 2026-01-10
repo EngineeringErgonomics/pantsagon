@@ -1,0 +1,7 @@
+schema_version: 1
+id: pantsagon.core
+version: 1.0.0
+description: Core monorepo skeleton
+variables:
+  - name: repo_name
+    type: string

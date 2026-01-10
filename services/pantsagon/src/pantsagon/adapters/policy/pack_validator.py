@@ -8,7 +8,18 @@ import yaml
 
 from pantsagon.domain.diagnostics import Diagnostic, Severity
 
-SCHEMA_PATH = Path(__file__).resolve().parents[3] / "schemas" / "pack.schema.v1.json"
+def _find_repo_root(start: Path) -> Path:
+    for parent in start.parents:
+        if (parent / "pants.toml").exists():
+            return parent
+    raise FileNotFoundError("Could not locate repo root containing pants.toml")
+
+
+def _schema_path(root: Path) -> Path:
+    return root / "shared/contracts/schemas/pack.schema.v1.json"
+
+
+SCHEMA_PATH = _schema_path(_find_repo_root(Path(__file__).resolve()))
 
 
 def load_manifest(pack_dir: Path) -> dict:

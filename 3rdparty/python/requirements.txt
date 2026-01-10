@@ -1,0 +1,8 @@
+typer>=0.12
+copier>=9.0
+pyyaml>=6.0
+jsonschema>=4.22
+tomli-w>=1.0
+rich>=13.7
+pytest>=8.0
+pytest-cov>=5.0

@@ -10,11 +10,15 @@ from pantsagon.application.init_repo import init_repo
 app = typer.Typer(add_completion=False)
 
 
-def _repo_root() -> Path:
+def _packs_root() -> Path:
     for parent in Path(__file__).resolve().parents:
-        if (parent / "packs").is_dir():
-            return parent
-    raise RuntimeError("Could not locate repo root containing packs/")
+        packs_dir = parent / "packs"
+        if packs_dir.is_dir():
+            return packs_dir
+        for child in parent.iterdir():
+            if child.is_dir() and (child / "pack.yaml").is_file():
+                return parent
+    raise RuntimeError("Could not locate bundled packs directory")
 
 
 @app.command(hidden=True)
@@ -33,8 +37,8 @@ def init(
 ):
     features = feature or []
     svc_list = [s for s in services.split(",") if s]
-    repo_root = _repo_root()
-    catalog = BundledPackCatalog(repo_root / "packs")
+    packs_root = _packs_root()
+    catalog = BundledPackCatalog(packs_root)
     renderer_port = CopierRenderer()
     policy_engine = PackPolicyEngine()
     workspace = FilesystemWorkspace(repo)

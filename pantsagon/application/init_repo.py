@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from pantsagon.domain.result import Result
+from pantsagon.domain.determinism import is_deterministic
 
 
 def _minimal_toml(lock: dict) -> str:
@@ -32,4 +33,6 @@ def init_repo(
     except ModuleNotFoundError:
         content = _minimal_toml(lock)
     (repo_path / ".pantsagon.toml").write_text(content)
+    # Minimal core file for now; later replaced by rendered pack output.
+    (repo_path / "pants.toml").write_text("[GLOBAL]\npants_version = \"2.30.0\"\n")
     return Result()

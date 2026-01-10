@@ -14,7 +14,7 @@
     },
     "id": {
       "type": "string",
-      "pattern": "^[a-z0-9_.-]+$",
+      "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$",
       "description": "Globally unique pack identifier (e.g. pantsagon.python)."
     },
     "version": {
@@ -52,7 +52,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^[a-z0-9_.-]+$"
+            "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$"
           },
           "description": "Other packs that must be present for this pack to be applied."
         }
@@ -64,7 +64,10 @@
       "properties": {
         "features": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
           "description": "Feature flags provided by this pack (e.g. openapi, docker)."
         },
         "service_templates": {

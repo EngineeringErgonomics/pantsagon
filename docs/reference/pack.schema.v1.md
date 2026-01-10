@@ -56,7 +56,7 @@ Tool-agnostic manifest describing a Pantsagon pack: identity, compatibility, fea
     },
     "id": {
       "description": "Globally unique pack identifier (e.g. pantsagon.python).",
-      "pattern": "^[a-z0-9_.-]+$",
+      "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$",
       "type": "string"
     },
     "provides": {
@@ -65,6 +65,7 @@ Tool-agnostic manifest describing a Pantsagon pack: identity, compatibility, fea
         "features": {
           "description": "Feature flags provided by this pack (e.g. openapi, docker).",
           "items": {
+            "pattern": "^[a-z][a-z0-9_-]*$",
             "type": "string"
           },
           "type": "array"
@@ -107,7 +108,7 @@ Tool-agnostic manifest describing a Pantsagon pack: identity, compatibility, fea
         "packs": {
           "description": "Other packs that must be present for this pack to be applied.",
           "items": {
-            "pattern": "^[a-z0-9_.-]+$",
+            "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$",
             "type": "string"
           },
           "type": "array"

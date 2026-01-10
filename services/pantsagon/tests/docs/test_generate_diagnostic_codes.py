@@ -2,14 +2,21 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts import generate_diagnostic_codes
+import generate_diagnostic_codes
 
 
 class GenerateDiagnosticCodesTest(unittest.TestCase):
     def test_generates_markdown_from_codes_yaml(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
-            src = repo_root / "pantsagon" / "diagnostics"
+            src = (
+                repo_root
+                / "services"
+                / "pantsagon"
+                / "src"
+                / "pantsagon"
+                / "diagnostics"
+            )
             src.mkdir(parents=True)
             (repo_root / "docs" / "reference").mkdir(parents=True)
 

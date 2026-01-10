@@ -24,7 +24,15 @@ def _render_generated_notice(command: str) -> str:
 
 
 def generate(repo_root: Path = REPO_ROOT) -> None:
-    src = repo_root / "pantsagon" / "diagnostics" / "codes.yaml"
+    src = (
+        repo_root
+        / "services"
+        / "pantsagon"
+        / "src"
+        / "pantsagon"
+        / "diagnostics"
+        / "codes.yaml"
+    )
     out = repo_root / "docs" / "reference" / "diagnostic-codes.md"
 
     if not src.exists():
@@ -43,7 +51,10 @@ def generate(repo_root: Path = REPO_ROOT) -> None:
     lines.append("")
     lines.append("# Diagnostic codes")
     lines.append("")
-    lines.append("This page is generated from `pantsagon/diagnostics/codes.yaml`.")
+    lines.append(
+        "This page is generated from "
+        "`services/pantsagon/src/pantsagon/diagnostics/codes.yaml`."
+    )
     lines.append("")
     lines.append("| Code | Severity | Rule | Message | Hint |")
     lines.append("|---|---|---|---|---|")

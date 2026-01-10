@@ -3,14 +3,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts import generate_schema_docs
+import generate_schema_docs
 
 
 class GenerateSchemaDocsTest(unittest.TestCase):
     def test_generates_markdown_from_schemas(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
-            schemas_dir = repo_root / "schemas"
+            schemas_dir = repo_root / "shared" / "contracts" / "schemas"
             schemas_dir.mkdir(parents=True)
             (repo_root / "docs" / "reference").mkdir(parents=True)
 

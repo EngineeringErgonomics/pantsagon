@@ -86,7 +86,7 @@ def _render_raw(schema: dict[str, Any]) -> str:
 
 
 def generate(repo_root: Path = REPO_ROOT) -> None:
-    schemas_dir = repo_root / "schemas"
+    schemas_dir = repo_root / "shared" / "contracts" / "schemas"
     out_dir = repo_root / "docs" / "reference"
     out_dir.mkdir(parents=True, exist_ok=True)
 

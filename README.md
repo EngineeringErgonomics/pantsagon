@@ -66,7 +66,7 @@ templates/  # rendered files
 ```
 
 Pantsagon validates:
-- JSON Schema conformance (`schemas/pack.schema.v1.json`)
+- JSON Schema conformance (`shared/contracts/schemas/pack.schema.v1.json`)
 - Manifest ↔ Copier variable alignment
 
 Bundled packs live in `packs/`.

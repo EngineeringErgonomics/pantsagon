@@ -5,7 +5,7 @@ Docs are part of the Pantsagon API surface. Keep them versioned and reproducible
 ## Where to edit
 
 - user docs live in `docs/`
-- reference docs are generated from `schemas/` and `pantsagon/diagnostics/codes.yaml`
+- reference docs are generated from `shared/contracts/schemas/` and `services/pantsagon/src/pantsagon/diagnostics/codes.yaml`
 
 ## Edit links
 

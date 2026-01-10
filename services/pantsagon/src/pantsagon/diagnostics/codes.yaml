@@ -1,6 +1,18 @@
 version: 1
 
 codes:
+  - code: LOCK_MISSING
+    severity: error
+    rule: repo.lock.exists
+    message: Repo lock (.pantsagon.toml) is missing.
+    hint: Run `pantsagon init` to create a repo lock.
+
+  - code: INIT_PORTS_MISSING
+    severity: error
+    rule: init.ports
+    message: Init requires renderer, pack catalog, policy engine, and workspace ports.
+    hint: Ensure the entrypoint wires required adapters for init.
+
   - code: PACK_NOT_FOUND
     severity: error
     rule: pack.catalog.fetch

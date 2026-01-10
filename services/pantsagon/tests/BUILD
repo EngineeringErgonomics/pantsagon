@@ -67,6 +67,13 @@ python_tests(
 )
 
 python_tests(
+    name="docs",
+    sources=["docs/**/*.py"],
+    dependencies=["//scripts:scripts"],
+    tags=["svc:pantsagon"],
+)
+
+python_tests(
     name="e2e",
     sources=["e2e/**/*.py"],
     dependencies=[

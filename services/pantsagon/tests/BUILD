@@ -1,73 +1,87 @@
 python_tests(
-  name="domain",
-  sources=["domain/**/*.py"],
-  dependencies=["//services/pantsagon/src/pantsagon/domain:domain"],
-  tags=["svc:pantsagon"],
+    name="domain",
+    sources=["domain/**/*.py"],
+    dependencies=["//services/pantsagon/src/pantsagon/domain:domain"],
+    tags=["svc:pantsagon"],
 )
 
 python_tests(
-  name="application",
-  sources=["application/**/*.py"],
-  dependencies=[
-    "//services/pantsagon/src/pantsagon/application:application",
-    "//services/pantsagon/src/pantsagon/ports:ports",
-    "//services/pantsagon/src/pantsagon/domain:domain",
-  ],
-  tags=["svc:pantsagon"],
+    name="application",
+    sources=["application/**/*.py"],
+    dependencies=[
+        "//services/pantsagon/src/pantsagon/application:application",
+        "//services/pantsagon/src/pantsagon/ports:ports",
+        "//services/pantsagon/src/pantsagon/domain:domain",
+    ],
+    tags=["svc:pantsagon"],
 )
 
 python_tests(
-  name="adapters",
-  sources=["adapters/**/*.py"],
-  dependencies=[
-    "//services/pantsagon/src/pantsagon/adapters:adapters",
-    "//services/pantsagon/src/pantsagon/application:application",
-    "//services/pantsagon/src/pantsagon/ports:ports",
-    "//services/pantsagon/src/pantsagon/domain:domain",
-  ],
-  tags=["svc:pantsagon"],
+    name="adapters",
+    sources=["adapters/**/*.py"],
+    dependencies=[
+        "//services/pantsagon/src/pantsagon/adapters:adapters",
+        "//services/pantsagon/src/pantsagon/application:application",
+        "//services/pantsagon/src/pantsagon/ports:ports",
+        "//services/pantsagon/src/pantsagon/domain:domain",
+    ],
+    tags=["svc:pantsagon"],
 )
 
 python_tests(
-  name="entrypoints",
-  sources=["entrypoints/**/*.py"],
-  dependencies=[
-    "//services/pantsagon/src/pantsagon/entrypoints:entrypoints",
-    "//services/pantsagon/src/pantsagon/adapters:adapters",
-    "//services/pantsagon/src/pantsagon/application:application",
-    "//services/pantsagon/src/pantsagon/ports:ports",
-    "//services/pantsagon/src/pantsagon/domain:domain",
-  ],
-  tags=["svc:pantsagon"],
+    name="entrypoints",
+    sources=["entrypoints/**/*.py"],
+    dependencies=[
+        "//services/pantsagon/src/pantsagon/entrypoints:entrypoints",
+        "//services/pantsagon/src/pantsagon/adapters:adapters",
+        "//services/pantsagon/src/pantsagon/application:application",
+        "//services/pantsagon/src/pantsagon/ports:ports",
+        "//services/pantsagon/src/pantsagon/domain:domain",
+    ],
+    tags=["svc:pantsagon"],
 )
 
 python_tests(
-  name="packs",
-  sources=["packs/**/*.py"],
-  dependencies=[
-    "//services/pantsagon/src/pantsagon/application:application",
-    "//services/pantsagon/src/pantsagon/domain:domain",
-    "//shared/contracts:schemas",
-    "//packs:bundled",
-  ],
-  tags=["svc:pantsagon"],
+    name="pack",
+    sources=["pack/**/*.py"],
+    dependencies=[
+        "//services/pantsagon/src/pantsagon/adapters:adapters",
+        "//services/pantsagon/src/pantsagon/application:application",
+        "//services/pantsagon/src/pantsagon/domain:domain",
+        "//shared/contracts:schemas",
+    ],
+    tags=["svc:pantsagon"],
 )
 
 python_tests(
-  name="e2e",
-  sources=["e2e/**/*.py"],
-  dependencies=[
-    "//services/pantsagon/src/pantsagon/entrypoints:entrypoints",
-  ],
-  tags=["svc:pantsagon"],
+    name="packs",
+    sources=["packs/**/*.py"],
+    dependencies=[
+        "//services/pantsagon/src/pantsagon/adapters:adapters",
+        "//services/pantsagon/src/pantsagon/application:application",
+        "//services/pantsagon/src/pantsagon/domain:domain",
+        "//shared/contracts:schemas",
+        "//packs:bundled",
+    ],
+    tags=["svc:pantsagon"],
 )
 
 python_tests(
-  name="misc",
-  sources=["test_imports.py"],
-  dependencies=[
-    "//services/pantsagon/src/pantsagon/application:application",
-    "//services/pantsagon/src/pantsagon/domain:domain",
-  ],
-  tags=["svc:pantsagon"],
+    name="e2e",
+    sources=["e2e/**/*.py"],
+    dependencies=[
+        "//services/pantsagon/src/pantsagon/entrypoints:entrypoints",
+    ],
+    tags=["svc:pantsagon"],
+)
+
+python_tests(
+    name="misc",
+    sources=["test_imports.py"],
+    dependencies=[
+        "//services/pantsagon/src/pantsagon:pkg",
+        "//services/pantsagon/src/pantsagon/application:application",
+        "//services/pantsagon/src/pantsagon/domain:domain",
+    ],
+    tags=["svc:pantsagon"],
 )

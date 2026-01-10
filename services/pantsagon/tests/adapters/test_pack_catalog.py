@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from pantsagon.adapters.pack_catalog.local import LocalPackCatalog
 
 

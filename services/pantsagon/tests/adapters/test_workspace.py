@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
 
 

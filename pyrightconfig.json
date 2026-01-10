@@ -2,5 +2,13 @@
   "pythonVersion": "3.12",
   "typeCheckingMode": "strict",
   "reportMissingTypeStubs": false,
-  "exclude": [".git", ".worktrees", "dist", "build"]
+  "exclude": [
+    ".git",
+    ".worktrees",
+    "build",
+    "dist",
+    "services/**/tests",
+    "shared/**/tests",
+    "tools/**/tests"
+  ]
 }

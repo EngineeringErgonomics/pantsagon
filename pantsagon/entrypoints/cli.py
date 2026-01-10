@@ -18,8 +18,9 @@ def init(
     lang: str = typer.Option(...),
     services: str = "",
     feature: list[str] = typer.Option(None),
+    augmented_coding: str = typer.Option("none", "--augmented-coding"),
 ):
     features = feature or []
     svc_list = [s for s in services.split(",") if s]
-    init_repo(repo, [lang], svc_list, features, renderer="copier")
+    init_repo(repo, [lang], svc_list, features, renderer="copier", augmented_coding=augmented_coding)
     raise typer.Exit(0)

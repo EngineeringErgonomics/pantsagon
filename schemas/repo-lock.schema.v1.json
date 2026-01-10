@@ -66,6 +66,10 @@
             "type": "string",
             "pattern": "^[a-z][a-z0-9-]*$"
           }
+        },
+        "augmented_coding": {
+          "type": "string",
+          "enum": ["agents", "claude", "gemini", "none"]
         }
       }
     },
@@ -98,6 +102,10 @@
               "ref": {
                 "type": "string",
                 "description": "Git ref, commit, or registry digest."
+              },
+              "digest": {
+                "type": "string",
+                "description": "Content digest for the pack."
               }
             }
           }

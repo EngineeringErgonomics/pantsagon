@@ -1,4 +1,6 @@
-__dependents_rules__ = [{"type": "*"}]
+__dependents_rules__(
+  ("*", "*"),
+)
 
 resources(
   name="schemas",

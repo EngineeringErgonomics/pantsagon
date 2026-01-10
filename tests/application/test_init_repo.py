@@ -1,5 +1,13 @@
 from pathlib import Path
 
+import importlib.util
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    importlib.util.find_spec("copier") is None,
+    reason="copier not installed",
+)
+
 from pantsagon.application.init_repo import init_repo
 
 

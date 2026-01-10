@@ -4,7 +4,7 @@ Hexagonal monorepos, generated with enforcement.
 
 Pantsagon is a pack‑based scaffolding CLI for creating Pants‑managed monorepos that enforce hexagonal architecture (domain / application / adapters / entrypoints) from day one. It is designed for strict dependency boundaries, contract‑first APIs, and reproducible upgrades via versioned template packs.
 
-Status: early v0.1 — core scaffolding + pack validation are in place; full pack rendering is in progress.
+Status: early v0.1 — `init` renders bundled packs into a minimal repo skeleton; pack content is still evolving.
 
 ## Why Pantsagon
 
@@ -38,8 +38,8 @@ pantsagon init /path/to/my-repo \
 ```
 
 Notes:
-- `init` currently writes a minimal `.pantsagon.toml` and `pants.toml` placeholder.
-- Pack rendering is the next milestone (Copier adapter is already wired).
+- `init` renders bundled packs into a minimal skeleton and writes `.pantsagon.toml`.
+- Pack content is intentionally small at v0.1 and will expand toward full hexagonal scaffolds.
 
 ## CLI (v0.1)
 
@@ -103,11 +103,10 @@ Notes:
 
 ## Roadmap (near‑term)
 
-- Render packs during `init` (Copier integration)
 - `add service` and `validate` commands
 - Pack smoke‑test command for pack authors
 - Git/registry pack sources + trust controls
 
 ## License
 
-MIT. See `LICENSE`.
+Apache License 2.0. See `LICENSE`.

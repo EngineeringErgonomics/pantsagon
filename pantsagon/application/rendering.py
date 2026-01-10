@@ -39,6 +39,7 @@ def render_bundled_packs(
     languages: list[str],
     services: list[str],
     features: list[str],
+    service_packages: dict[str, str] | None = None,
     allow_hooks: bool = False,
 ) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
@@ -47,9 +48,11 @@ def render_bundled_packs(
 
     pack_ids = resolve_pack_ids(languages, features)
     service_name = services[0] if services else "service"
+    service_pkg = (service_packages or {}).get(service_name, service_name.replace("-", "_"))
     answers = {
         "repo_name": repo_path.name,
         "service_name": service_name,
+        "service_pkg": service_pkg,
     }
 
     for pack_id in pack_ids:

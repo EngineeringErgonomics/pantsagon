@@ -2,6 +2,13 @@ schema_version: 1
 id: pantsagon.python
 version: 1.0.0
 description: Python service skeleton
+compatibility:
+  pants: ">=2.30.0,<2.31"
+requires:
+  packs:
+    - pantsagon.core
 variables:
   - name: service_name
+    type: string
+  - name: service_pkg
     type: string

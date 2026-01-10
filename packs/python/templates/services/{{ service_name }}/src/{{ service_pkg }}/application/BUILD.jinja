@@ -1,0 +1,13 @@
+__dependents_rules__ = [
+  {"type": "tag", "tag": "svc:{{ service_name }}"},
+]
+
+python_sources(
+  name="application",
+  tags=["svc:{{ service_name }}", "layer:application"],
+  dependencies=[
+    "//services/{{ service_name }}/src/{{ service_pkg }}/ports:ports",
+    "//services/{{ service_name }}/src/{{ service_pkg }}/domain:domain",
+    "//shared/foundation:lib",
+  ],
+)

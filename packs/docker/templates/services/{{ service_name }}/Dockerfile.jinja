@@ -1,0 +1,5 @@
+FROM python:3.12-slim
+WORKDIR /app
+COPY dist/app.pex /app/app.pex
+RUN chmod +x /app/app.pex
+ENTRYPOINT ["/app/app.pex"]

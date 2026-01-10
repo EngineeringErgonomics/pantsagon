@@ -2,6 +2,14 @@ schema_version: 1
 id: pantsagon.openapi
 version: 1.0.0
 description: OpenAPI feature pack
+compatibility:
+  pants: ">=2.30.0,<2.31"
+requires:
+  packs:
+    - pantsagon.core
+provides:
+  features:
+    - openapi
 variables:
   - name: service_name
     type: string

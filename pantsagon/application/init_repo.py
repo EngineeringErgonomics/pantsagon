@@ -19,6 +19,7 @@ def init_repo(
     renderer: str,
     augmented_coding: str | None = None,
 ) -> Result[None]:
+    service_packages = {name: name.replace("-", "_") for name in services}
     lock = {
         "tool": {"name": "pantsagon", "version": "0.1.0"},
         "settings": {"renderer": renderer, "strict": False, "strict_manifest": True, "allow_hooks": False},
@@ -28,7 +29,7 @@ def init_repo(
             "services": services,
             "augmented_coding": augmented_coding or "none",
         },
-        "resolved": {"packs": [], "answers": {}},
+        "resolved": {"packs": [], "answers": {"service_packages": service_packages}},
     }
     try:
         import tomli_w
@@ -37,7 +38,15 @@ def init_repo(
         content = _minimal_toml(lock)
     workspace = FilesystemWorkspace(repo_path)
     stage = workspace.begin_transaction()
-    render_bundled_packs(stage, repo_path, languages, services, features, allow_hooks=False)
+    render_bundled_packs(
+        stage,
+        repo_path,
+        languages,
+        services,
+        features,
+        service_packages=service_packages,
+        allow_hooks=False,
+    )
     (stage / ".pantsagon.toml").write_text(content)
     workspace.commit(stage)
 

@@ -1,0 +1,22 @@
+layers:
+  domain:
+    include:
+      - "services/**/src/**/domain/**/*.py"
+    deny:
+      - "requests"
+      - "fastapi"
+      - "boto3"
+  application:
+    include:
+      - "services/**/src/**/application/**/*.py"
+    deny:
+      - "requests"
+      - "fastapi"
+      - "boto3"
+  ports:
+    include:
+      - "services/**/src/**/ports/**/*.py"
+    deny:
+      - "requests"
+      - "fastapi"
+      - "boto3"

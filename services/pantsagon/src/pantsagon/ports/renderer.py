@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from pantsagon.domain.pack import PackRef
 
@@ -10,7 +10,7 @@ class RenderRequest:
     pack: PackRef
     pack_path: Path
     staging_dir: Path
-    answers: dict
+    answers: dict[str, Any]
     allow_hooks: bool
 
 

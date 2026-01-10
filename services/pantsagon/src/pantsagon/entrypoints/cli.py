@@ -7,7 +7,7 @@ app = typer.Typer(add_completion=False)
 
 
 @app.command(hidden=True)
-def _noop() -> None:
+def _noop() -> None:  # pyright: ignore[reportUnusedFunction]
     """Placeholder to keep Typer in group mode when only one command exists."""
     return None
 
@@ -22,5 +22,12 @@ def init(
 ):
     features = feature or []
     svc_list = [s for s in services.split(",") if s]
-    init_repo(repo, [lang], svc_list, features, renderer="copier", augmented_coding=augmented_coding)
+    init_repo(
+        repo,
+        [lang],
+        svc_list,
+        features,
+        renderer="copier",
+        augmented_coding=augmented_coding,
+    )
     raise typer.Exit(0)

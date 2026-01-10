@@ -2,37 +2,44 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import jsonschema
 import yaml
 
 from pantsagon.domain.diagnostics import Diagnostic, Severity
+from pantsagon.domain.result import Result
+from pantsagon.ports.policy_engine import PolicyEnginePort
 
-def _find_repo_root(start: Path) -> Path:
-    for parent in start.parents:
-        if (parent / "pants.toml").exists():
-            return parent
-    raise FileNotFoundError("Could not locate repo root containing pants.toml")
+Manifest = dict[str, Any]
 
 
-def _schema_path(root: Path) -> Path:
-    return root / "shared/contracts/schemas/pack.schema.v1.json"
+def _schema_path(root: Path | None = None) -> Path:
+    base = root or Path.cwd()
+    return base / "shared/contracts/schemas/pack.schema.v1.json"
 
 
-SCHEMA_PATH = _schema_path(_find_repo_root(Path(__file__).resolve()))
+SCHEMA_PATH = _schema_path()
 
 
-def load_manifest(pack_dir: Path) -> dict:
-    return yaml.safe_load((pack_dir / "pack.yaml").read_text()) or {}
+def load_manifest(pack_dir: Path) -> Manifest:
+    raw: object = yaml.safe_load((pack_dir / "pack.yaml").read_text()) or {}
+    if isinstance(raw, dict):
+        return cast(Manifest, raw)
+    return {}
 
 
 def load_copier_vars(pack_dir: Path) -> set[str]:
-    data = yaml.safe_load((pack_dir / "copier.yml").read_text()) or {}
+    raw: object = yaml.safe_load((pack_dir / "copier.yml").read_text()) or {}
+    data: dict[str, Any] = cast(dict[str, Any], raw) if isinstance(raw, dict) else {}
     return {k for k in data.keys() if not k.startswith("_")}
 
 
-def validate_manifest_schema(manifest: dict) -> list[Diagnostic]:
-    schema = json.loads(SCHEMA_PATH.read_text())
+def validate_manifest_schema(manifest: Manifest) -> list[Diagnostic]:
+    schema_raw = json.loads(SCHEMA_PATH.read_text())
+    schema: dict[str, Any] = (
+        cast(dict[str, Any], schema_raw) if isinstance(schema_raw, dict) else {}
+    )
     try:
         jsonschema.validate(manifest, schema)
         return []
@@ -47,8 +54,14 @@ def validate_manifest_schema(manifest: dict) -> list[Diagnostic]:
         ]
 
 
-def crosscheck_variables(manifest: dict, copier_vars: set[str]) -> list[Diagnostic]:
-    declared = {v["name"] for v in manifest.get("variables", [])}
+def crosscheck_variables(manifest: Manifest, copier_vars: set[str]) -> list[Diagnostic]:
+    raw_variables: object = manifest.get("variables", [])
+    variables: list[dict[str, Any]] = []
+    if isinstance(raw_variables, list):
+        for item in cast(list[object], raw_variables):
+            if isinstance(item, dict):
+                variables.append(cast(dict[str, Any], item))
+    declared = {str(v.get("name")) for v in variables if v.get("name") is not None}
     diagnostics: list[Diagnostic] = []
     undeclared = copier_vars - declared
     for var in sorted(undeclared):
@@ -61,3 +74,16 @@ def crosscheck_variables(manifest: dict, copier_vars: set[str]) -> list[Diagnost
             )
         )
     return diagnostics
+
+
+class PackPolicyEngine(PolicyEnginePort):
+    def validate_repo(self, repo_path: Path) -> Result[None]:
+        return Result()
+
+    def validate_pack(self, pack_path: Path) -> Result[Manifest]:
+        manifest = load_manifest(pack_path)
+        copier_vars = load_copier_vars(pack_path)
+        diagnostics: list[Diagnostic] = []
+        diagnostics.extend(validate_manifest_schema(manifest))
+        diagnostics.extend(crosscheck_variables(manifest, copier_vars))
+        return Result(value=manifest, diagnostics=diagnostics)

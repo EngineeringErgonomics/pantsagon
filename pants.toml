@@ -25,6 +25,12 @@ root_patterns = [
   "shared/**/src",
   "services/**/src",
   "tools/**/src",
+  "shared/**/tests",
+  "services/**/tests",
+  "tools/**/tests",
+  "shared/**/contracts",
+  "packs",
+  "shared/contracts",
 ]
 
 [python]

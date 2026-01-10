@@ -1,0 +1,98 @@
+site_name: Pantsagon
+site_description: Hexagonal monorepos in Pants - generated with enforced boundaries.
+site_url: https://engineeringergonomics.github.io/pantsagon/
+repo_url: https://github.com/EngineeringErgonomics/pantsagon
+repo_name: EngineeringErgonomics/pantsagon
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - toc.follow
+    - content.action.edit
+    - content.code.copy
+    - content.tabs.link
+    - search.suggest
+    - search.highlight
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+extra:
+  version:
+    provider: mike
+
+nav:
+  - Home: index.md
+
+  - Getting started:
+      - Quickstart: getting-started/quickstart.md
+      - Generated repo tour: getting-started/generated-repo-tour.md
+      - FAQ: getting-started/faq.md
+
+  - Concepts:
+      - Architecture: concepts/architecture.md
+      - Documentation contract: concepts/documentation-contract.md
+      - Hexagonal layering: concepts/hexagonal-architecture.md
+      - Packs: concepts/packs.md
+      - Repo lock: concepts/repo-lock.md
+      - Diagnostics: concepts/diagnostics.md
+      - Trust model: concepts/trust-and-security.md
+
+  - CLI:
+      - Overview: cli/index.md
+      - init: cli/init.md
+      - add service: cli/add-service.md
+      - validate: cli/validate.md
+      - Exit codes: cli/exit-codes.md
+
+  - Pack authoring:
+      - Overview: pack-authoring/index.md
+      - Pack format: pack-authoring/pack-format.md
+      - Variables: pack-authoring/variables.md
+      - Validation: pack-authoring/validation.md
+      - Publishing: pack-authoring/publishing.md
+
+  - Plugin authoring:
+      - Overview: plugin-authoring/index.md
+      - Ports: plugin-authoring/ports.md
+      - Adapters: plugin-authoring/adapters.md
+      - Discovery: plugin-authoring/discovery.md
+
+  - Reference:
+      - Schemas:
+          - pack.schema.v1: reference/pack.schema.v1.md
+          - repo lock schema: reference/repo-lock.schema.v1.md
+          - result schema: reference/result.schema.v1.md
+      - Diagnostic codes: reference/diagnostic-codes.md
+
+  - Contributing:
+      - Docs: contributing/docs.md

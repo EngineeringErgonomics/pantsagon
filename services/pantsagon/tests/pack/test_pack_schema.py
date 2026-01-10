@@ -1,4 +1,12 @@
+from pathlib import Path
+
 from pantsagon.application.pack_validation import validate_pack
+from pantsagon.adapters.policy.pack_validator import _schema_path
+
+
+def test_schema_path_points_to_shared_contracts() -> None:
+    root = Path(__file__).resolve().parents[4]
+    assert _schema_path(root).as_posix().endswith("shared/contracts/schemas/pack.schema.v1.json")
 
 
 def test_manifest_schema_validation(tmp_path):

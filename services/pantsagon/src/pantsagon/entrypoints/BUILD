@@ -1,6 +1,21 @@
-__dependents_rules__ = [
-  {"address": "services/pantsagon:cli"},
-]
+__dependents_rules__(
+  ("*", "//services/pantsagon:cli", "!*"),
+)
+
+__dependencies_rules__(
+  (
+    "*",
+    "//services/pantsagon/src/pantsagon/entrypoints/**",
+    "//services/pantsagon/src/pantsagon/adapters/**",
+    "//services/pantsagon/src/pantsagon/application/**",
+    "//services/pantsagon/src/pantsagon/ports/**",
+    "//services/pantsagon/src/pantsagon/domain/**",
+    "//shared/foundation/**",
+    "//shared/adapters/**",
+    "//3rdparty/python/**",
+    "!*",
+  ),
+)
 
 python_sources(
   name="entrypoints",
@@ -11,15 +26,5 @@ python_sources(
     "//services/pantsagon/src/pantsagon/ports:ports",
     "//services/pantsagon/src/pantsagon/domain:domain",
     "//shared/foundation:lib",
-  ],
-  __dependencies_rules__=[
-    {"path": "services/pantsagon/src/pantsagon/entrypoints/**"},
-    {"path": "services/pantsagon/src/pantsagon/adapters/**"},
-    {"path": "services/pantsagon/src/pantsagon/application/**"},
-    {"path": "services/pantsagon/src/pantsagon/ports/**"},
-    {"path": "services/pantsagon/src/pantsagon/domain/**"},
-    {"path": "shared/foundation/src/**"},
-    {"path": "shared/adapters/**"},
-    {"path": "3rdparty/python/**"},
   ],
 )

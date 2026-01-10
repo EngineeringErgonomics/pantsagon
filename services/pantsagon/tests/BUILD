@@ -2,6 +2,7 @@ python_tests(
   name="domain",
   sources=["domain/**/*.py"],
   dependencies=["//services/pantsagon/src/pantsagon/domain:domain"],
+  tags=["svc:pantsagon"],
 )
 
 python_tests(
@@ -12,6 +13,7 @@ python_tests(
     "//services/pantsagon/src/pantsagon/ports:ports",
     "//services/pantsagon/src/pantsagon/domain:domain",
   ],
+  tags=["svc:pantsagon"],
 )
 
 python_tests(
@@ -23,6 +25,7 @@ python_tests(
     "//services/pantsagon/src/pantsagon/ports:ports",
     "//services/pantsagon/src/pantsagon/domain:domain",
   ],
+  tags=["svc:pantsagon"],
 )
 
 python_tests(
@@ -35,6 +38,7 @@ python_tests(
     "//services/pantsagon/src/pantsagon/ports:ports",
     "//services/pantsagon/src/pantsagon/domain:domain",
   ],
+  tags=["svc:pantsagon"],
 )
 
 python_tests(
@@ -46,6 +50,7 @@ python_tests(
     "//shared/contracts:schemas",
     "//packs:bundled",
   ],
+  tags=["svc:pantsagon"],
 )
 
 python_tests(
@@ -54,6 +59,7 @@ python_tests(
   dependencies=[
     "//services/pantsagon/src/pantsagon/entrypoints:entrypoints",
   ],
+  tags=["svc:pantsagon"],
 )
 
 python_tests(
@@ -63,4 +69,5 @@ python_tests(
     "//services/pantsagon/src/pantsagon/application:application",
     "//services/pantsagon/src/pantsagon/domain:domain",
   ],
+  tags=["svc:pantsagon"],
 )

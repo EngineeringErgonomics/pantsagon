@@ -1,4 +1,16 @@
-__dependents_rules__ = [{"tags": ["svc:pantsagon"]}]
+__dependents_rules__(
+  ("*", {"tags": ["svc:pantsagon"]}, "!*"),
+)
+
+__dependencies_rules__(
+  (
+    "*",
+    "//services/pantsagon/src/pantsagon/ports/**",
+    "//services/pantsagon/src/pantsagon/domain/**",
+    "//shared/foundation/**",
+    "!*",
+  ),
+)
 
 python_sources(
   name="ports",
@@ -6,10 +18,5 @@ python_sources(
   dependencies=[
     "//services/pantsagon/src/pantsagon/domain:domain",
     "//shared/foundation:lib",
-  ],
-  __dependencies_rules__=[
-    {"path": "services/pantsagon/src/pantsagon/ports/**"},
-    {"path": "services/pantsagon/src/pantsagon/domain/**"},
-    {"path": "shared/foundation/src/**"},
   ],
 )

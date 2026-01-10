@@ -1,0 +1,26 @@
+version: 1
+
+codes:
+  - code: PACK_NOT_FOUND
+    severity: error
+    rule: pack.catalog.fetch
+    message: Pack could not be found.
+    hint: Check pack id/version and configured pack sources.
+
+  - code: PACK_MISSING_REQUIRED
+    severity: error
+    rule: pack.requires.packs
+    message: Pack is missing required dependency packs.
+    hint: Add the required pack or choose a compatible feature set.
+
+  - code: COPIER_UNDECLARED_VARIABLE
+    severity: error
+    rule: pack.variables.copier_undeclared
+    message: Copier defines a variable that is not declared in pack.yaml.
+    hint: Declare it in pack.yaml.variables or remove it from copier.yml.
+
+  - code: COPIER_DEFAULT_MISMATCH
+    severity: warn
+    rule: pack.variables.default_mismatch
+    message: Copier default does not match pack.yaml default.
+    hint: Align defaults, or run in strict mode to fail builds.

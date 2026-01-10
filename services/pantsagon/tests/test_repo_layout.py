@@ -6,3 +6,4 @@ def test_repo_layout_basics_exist() -> None:
     assert (root / "pants.toml").exists()
     assert (root / "3rdparty/python/requirements.txt").exists()
     assert (root / "shared/contracts/schemas/pack.schema.v1.json").exists()
+    assert (root / "services/pantsagon/src/pantsagon/entrypoints/cli.py").exists()

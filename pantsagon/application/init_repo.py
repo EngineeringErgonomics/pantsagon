@@ -4,6 +4,9 @@ from pantsagon.domain.result import Result
 from pantsagon.domain.determinism import is_deterministic
 from pantsagon.application.rendering import render_bundled_packs
 from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
+from pantsagon.domain.diagnostics import Severity
+from pantsagon.domain.naming import BUILTIN_RESERVED_SERVICES, validate_service_name
+from pantsagon.domain.strictness import apply_strictness
 
 
 def _minimal_toml(lock: dict) -> str:
@@ -18,10 +21,17 @@ def init_repo(
     features: list[str],
     renderer: str,
     augmented_coding: str | None = None,
+    strict: bool | None = None,
 ) -> Result[None]:
+    diagnostics = []
+    for service in services:
+        diagnostics.extend(validate_service_name(service, BUILTIN_RESERVED_SERVICES, set()))
+    if any(d.severity == Severity.ERROR for d in diagnostics):
+        return Result(diagnostics=apply_strictness(diagnostics, bool(strict)))
+
     lock = {
         "tool": {"name": "pantsagon", "version": "0.1.0"},
-        "settings": {"renderer": renderer, "strict": False, "strict_manifest": True, "allow_hooks": False},
+        "settings": {"renderer": renderer, "strict": bool(strict), "strict_manifest": True, "allow_hooks": False},
         "selection": {
             "languages": languages,
             "features": features,

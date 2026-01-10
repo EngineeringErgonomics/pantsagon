@@ -12,6 +12,7 @@
 - Pack sources: bundled + local only (no git/registry in v1).
 - Hooks: disabled by default; bundled packs may be allowed with explicit trust.
 - No upgrade command in v1.
+- Optional augmented-coding file creation (AGENTS/Claude/Gemini) during repo setup when explicitly requested.
 
 ## Repo Layout
 ```
@@ -70,6 +71,7 @@ allow_hooks = false
 languages = ["python"]
 features = ["openapi", "docker"]
 services = ["monitors", "governance"]
+augmented_coding = "agents" # or "claude" | "gemini" | "none"
 
 [[resolved.packs]]
 id = "pantsagon.core"
@@ -144,6 +146,7 @@ python_max = "3.14"
   - `--lang python` (required)
   - `--services a,b`
   - `--feature openapi --feature docker` (alias `--with`)
+  - `--augmented-coding {agents|claude|gemini|none}` (creates AGENTS.md or equivalent)
   - `--non-interactive`
   - `--strict`
   - `--renderer copier`

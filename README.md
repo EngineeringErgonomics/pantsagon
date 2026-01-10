@@ -55,6 +55,21 @@ Planned (designed, not yet wired):
 - `pantsagon add service <name>`
 - `pantsagon validate`
 
+## Validation & strictness
+
+Naming rules are enforced early, before filesystem writes:
+
+- **Service names**: strict kebab-case, no leading/trailing or doubled dashes, and no reserved names.
+- **Pack ids**: lowercase dot-namespaced identifiers (e.g. `pantsagon.core`).
+- **Features**: lowercase kebab-case or snake_case (no dots).
+- **Variables**: valid identifiers matching Copier variables.
+
+Strictness tiers:
+
+- `--strict` upgrades upgradeable warnings to errors.
+- Repo defaults live in `.pantsagon.toml` under `[settings]` (CLI `--strict` overrides repo settings).
+- Project-specific reserved service names can be added under `[settings.naming]` with `reserved_services = [...]`.
+
 ## Packs
 
 A pack is a directory with:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -7,8 +8,8 @@ from pantsagon.adapters.pack_catalog.bundled import BundledPackCatalog
 from pantsagon.adapters.policy.pack_validator import PackPolicyEngine
 from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
 from pantsagon.application.pack_index import load_pack_index, resolve_pack_ids
-from pantsagon.application.repo_lock import write_lock
 from pantsagon.application.rendering import render_bundled_packs
+from pantsagon.application.repo_lock import write_lock
 from pantsagon.domain.diagnostics import Diagnostic, Severity
 from pantsagon.domain.result import Result
 
@@ -25,7 +26,7 @@ def _bundled_packs_root() -> Path:
 
 
 def _order_packs_by_requires(packs: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    pack_ids = {str(p.get("id")) for p in packs if p.get("id") is not None}
+    pack_ids = {str(pack.get("id")) for pack in packs if pack.get("id") is not None}
     requires_map: dict[str, set[str]] = {}
     for pack in packs:
         pack_id = str(pack.get("id"))
@@ -55,6 +56,13 @@ def _order_packs_by_requires(packs: list[dict[str, Any]]) -> list[dict[str, Any]
     ordered_ids.extend(remaining)
     pack_by_id = {str(pack.get("id")): pack for pack in packs if pack.get("id") is not None}
     return [pack_by_id[pid] for pid in ordered_ids]
+
+
+def _render_order(packs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    ordered = _order_packs_by_requires(packs)
+    core = [pack for pack in ordered if pack.get("id") == "pantsagon.core"]
+    rest = [pack for pack in ordered if pack.get("id") != "pantsagon.core"]
+    return rest + core if core else ordered
 
 
 def init_repo(
@@ -117,8 +125,9 @@ def init_repo(
         "service_pkg": service_pkg,
         "service_packages": service_packages,
     }
-    resolved_packs = _order_packs_by_requires(resolved_packs)
 
+    ordered_packs = _render_order(resolved_packs)
+    ordered_ids = [pack["id"] for pack in ordered_packs]
     lock: dict[str, Any] = {
         "tool": {"name": "pantsagon", "version": "0.1.0"},
         "settings": {
@@ -135,8 +144,8 @@ def init_repo(
         },
         "resolved": {
             "packs": [
-                {"id": p["id"], "version": p["version"], "source": p["source"]}
-                for p in resolved_packs
+                {"id": pack["id"], "version": pack["version"], "source": pack["source"]}
+                for pack in ordered_packs
             ],
             "answers": answers,
         },
@@ -144,24 +153,26 @@ def init_repo(
 
     workspace = FilesystemWorkspace(repo_path)
     stage = workspace.begin_transaction()
-    render_bundled_packs(
-        stage,
-        repo_path,
-        languages,
-        services,
-        features,
-        service_packages=service_packages,
-        pack_ids=[p["id"] for p in resolved_packs],
+    write_lock(stage / ".pantsagon.toml", lock)
+    render_diags = render_bundled_packs(
+        stage_dir=stage,
+        repo_path=repo_path,
+        pack_ids=ordered_ids,
+        answers=answers,
         allow_hooks=False,
     )
-    write_lock(stage / ".pantsagon.toml", lock)
-    workspace.commit(stage)
+    diagnostics.extend(render_diags)
+    if any(d.severity == Severity.ERROR for d in render_diags):
+        shutil.rmtree(stage, ignore_errors=True)
+        return Result(diagnostics=diagnostics)
 
     augmented = augmented_coding or "none"
     if augmented == "agents":
-        (repo_path / "AGENTS.md").write_text("# AGENTS\n")
+        (stage / "AGENTS.md").write_text("# AGENTS\n")
     elif augmented == "claude":
-        (repo_path / "CLAUDE.md").write_text("# CLAUDE\n")
+        (stage / "CLAUDE.md").write_text("# CLAUDE\n")
     elif augmented == "gemini":
-        (repo_path / "GEMINI.md").write_text("# GEMINI\n")
+        (stage / "GEMINI.md").write_text("# GEMINI\n")
+
+    workspace.commit(stage)
     return Result(diagnostics=diagnostics)

@@ -16,10 +16,12 @@ This page is generated from `pantsagon/diagnostics/codes.yaml`.
 | `LOCK_SECTION_MISSING` | `error` | `lock.section` | Repo lock is missing a required section. | Regenerate the repo lock or repair the missing section. |
 | `LOCK_SELECTION_MISMATCH` | `warn` | `lock.selection` | Selection does not match resolved pack set. | Update selection or re-resolve packs to align. |
 | `PACK_COMPAT_INVALID` | `error` | `pack.compatibility` | Pack compatibility metadata is invalid. | Ensure compatibility.pants is a string. |
+| `PACK_FILE_MISSING` | `error` | `pack.files` | Pack is missing a required file. | Ensure pack.yaml and copier.yml exist in the pack directory. |
 | `PACK_INDEX_UNKNOWN_FEATURE` | `error` | `pack.index.feature` | Selection feature is not defined in the pack index. | Add the feature mapping to packs/_index.json. |
 | `PACK_INDEX_UNKNOWN_LANGUAGE` | `error` | `pack.index.language` | Selection language is not defined in the pack index. | Add the language mapping to packs/_index.json. |
 | `PACK_LOCATION_MISSING` | `error` | `pack.catalog.fetch` | Local pack is missing a location. | Set location for local pack refs in the lock. |
 | `PACK_MISSING_REQUIRED` | `error` | `pack.requires.packs` | Pack is missing required dependency packs. | Add the required pack or choose a compatible feature set. |
 | `PACK_NOT_FOUND` | `error` | `pack.catalog.fetch` | Pack could not be found. | Check pack id/version and configured pack sources. |
+| `PACK_RENDER_FAILED` | `error` | `pack.render` | Pack render failed. | Check Copier templates and inputs. |
 | `REPO_LAYER_MISSING` | `error` | `repo.layer.exists` | Service layer directory is missing. | Regenerate the service skeleton or fix the layout. |
 | `REPO_SERVICE_MISSING` | `error` | `repo.service.exists` | Service directory is missing for a declared service. | Regenerate the service or remove it from selection. |

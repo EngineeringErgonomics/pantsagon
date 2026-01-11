@@ -96,3 +96,15 @@ codes:
     rule: pack.variables.default_mismatch
     message: Copier default does not match pack.yaml default.
     hint: Align defaults, or run in strict mode to fail builds.
+
+  - code: PACK_FILE_MISSING
+    severity: error
+    rule: pack.files
+    message: Pack is missing a required file.
+    hint: Ensure pack.yaml and copier.yml exist in the pack directory.
+
+  - code: PACK_RENDER_FAILED
+    severity: error
+    rule: pack.render
+    message: Pack render failed.
+    hint: Check Copier templates and inputs.

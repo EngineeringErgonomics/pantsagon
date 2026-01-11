@@ -1,0 +1,59 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+    rebase-strategy: "auto"
+    labels:
+      - "dependencies"
+      - "ci"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    labels:
+      - "dependencies"
+    groups:
+      runtime:
+        patterns:
+          - "typer"
+          - "rich"
+          - "pyyaml"
+          - "tomli-w"
+          - "jsonschema"
+          - "copier"
+      dev-tooling:
+        patterns:
+          - "pytest*"
+
+  - package-ecosystem: "pip"
+    directory: "/3rdparty/python"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    labels:
+      - "dependencies"
+    groups:
+      tooling:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "pip"
+    directory: "/docs"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    labels:
+      - "dependencies"
+      - "docs"
+    groups:
+      docs:
+        patterns:
+          - "*"

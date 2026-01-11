@@ -11,17 +11,17 @@ class GenerateSchemaDocsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
             schemas_dir = repo_root / "schemas"
+            pack_schema_dir = repo_root / "shared" / "contracts" / "schemas"
             schemas_dir.mkdir(parents=True)
-            contracts_dir = repo_root / "shared" / "contracts" / "schemas"
-            contracts_dir.mkdir(parents=True)
+            pack_schema_dir.mkdir(parents=True)
             (repo_root / "docs" / "reference").mkdir(parents=True)
 
-            def write_schema(name: str, title: str) -> None:
-                (schemas_dir / name).write_text(
+            def write_schema(path: Path, title: str) -> None:
+                path.write_text(
                     json.dumps(
                         {
                             "$schema": "https://json-schema.org/draft/2020-12/schema",
-                            "$id": f"https://example.test/{name}",
+                            "$id": f"https://example.test/{path.name}",
                             "title": title,
                             "description": f"{title} description",
                             "type": "object",
@@ -32,22 +32,9 @@ class GenerateSchemaDocsTest(unittest.TestCase):
                     encoding="utf-8",
                 )
 
-            (contracts_dir / "pack.schema.v1.json").write_text(
-                json.dumps(
-                    {
-                        "$schema": "https://json-schema.org/draft/2020-12/schema",
-                        "$id": "https://example.test/pack.schema.v1.json",
-                        "title": "Pack Schema",
-                        "description": "Pack Schema description",
-                        "type": "object",
-                        "properties": {"alpha": {"type": "string"}},
-                        "required": ["alpha"],
-                    }
-                ),
-                encoding="utf-8",
-            )
-            write_schema("repo-lock.schema.v1.json", "Repo Lock Schema")
-            write_schema("result.schema.v1.json", "Result Schema")
+            write_schema(pack_schema_dir / "pack.schema.v1.json", "Pack Schema")
+            write_schema(schemas_dir / "repo-lock.schema.v1.json", "Repo Lock Schema")
+            write_schema(schemas_dir / "result.schema.v1.json", "Result Schema")
 
             generate_schema_docs.generate(repo_root)
 

@@ -45,7 +45,7 @@
 - [ ] README updated with validation behavior
 
 ## M6 — CI + Release Readiness
-- [ ] GitHub Actions runs pytest + pack validation
-- [ ] Deterministic mode used in CI for reproducible tests
-- [ ] Release checklist for v1.0.0
-- [ ] README final pass
+- [x] GitHub Actions runs pytest + pack validation
+- [x] Deterministic mode used in CI for reproducible tests
+- [x] Release checklist for v1.0.0
+- [x] README final pass

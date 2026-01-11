@@ -1,2 +1,8 @@
 [GLOBAL]
 pants_version = "2.30.0"
+backend_packages = [
+  "pants.backend.python",
+  "pants.backend.python.lint.ruff",
+  "pants.backend.python.typecheck.pyright",
+  "pants.backend.docker",
+]

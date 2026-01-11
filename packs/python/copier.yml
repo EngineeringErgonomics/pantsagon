@@ -4,3 +4,6 @@ _templates_suffix: ".jinja"
 service_name:
   type: str
   default: "service"
+service_pkg:
+  type: str
+  default: "service"

@@ -119,8 +119,46 @@ templates/  # rendered files
 Pantsagon validates:
 - JSON Schema conformance (`shared/contracts/schemas/pack.schema.v1.json`)
 - Manifest ↔ Copier variable alignment
+- Bundled pack smoke-render validation (`python -m pantsagon.tools.validate_packs --bundled`)
 
 Bundled packs live in `packs/`.
+
+## Example generated tree
+
+Example (Python + OpenAPI + Docker):
+
+```
+my-repo/
+  pants.toml
+  .pantsagon.toml
+  .github/workflows/ci.yml
+  services/
+    monitor-cost/
+      BUILD
+      Dockerfile
+      README.md
+      src/monitor_cost/
+        domain/
+        ports/
+        application/
+        adapters/
+        entrypoints/
+  shared/
+    foundation/
+    adapters/
+    contracts/
+      openapi/
+        monitor-cost.yaml
+  docs/
+    README.md
+  tools/
+    forbidden_imports/
+      README.md
+  3rdparty/
+    python/
+      requirements.txt
+      BUILD
+```
 
 ## Augmented coding files
 
@@ -146,6 +184,13 @@ Run tests:
 
 ```bash
 pytest -q
+```
+
+Pack validation:
+
+```bash
+PANTSAGON_DETERMINISTIC=1 PYTHONPATH=services/pantsagon/src \
+  python -m pantsagon.tools.validate_packs --bundled --quiet
 ```
 
 Notes:

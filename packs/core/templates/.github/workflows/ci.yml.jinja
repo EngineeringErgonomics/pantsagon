@@ -1,0 +1,25 @@
+name: ci
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  pants:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Pants
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pantsbuild.pants==2.30.0"
+      - name: Pants lint
+        run: pants lint ::
+      - name: Pants check
+        run: pants check ::
+      - name: Pants test
+        run: pants test ::

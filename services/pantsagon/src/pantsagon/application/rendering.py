@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Iterable
 
 from pantsagon.adapters.pack_catalog.bundled import BundledPackCatalog
+from pantsagon.adapters.policy.pack_validator import PackPolicyEngine
 from pantsagon.adapters.renderer.copier_renderer import CopierRenderer
 from pantsagon.application.pack_validation import validate_pack
 from pantsagon.domain.diagnostics import Diagnostic, Severity
@@ -45,6 +46,7 @@ def render_bundled_packs(
     diagnostics: list[Diagnostic] = []
     catalog = BundledPackCatalog(_bundled_packs_root())
     renderer = CopierRenderer()
+    engine = PackPolicyEngine()
 
     pack_ids = resolve_pack_ids(languages, features)
     service_name = services[0] if services else "service"
@@ -57,7 +59,7 @@ def render_bundled_packs(
 
     for pack_id in pack_ids:
         pack_path = catalog.get_pack_path(pack_id)
-        validation = validate_pack(pack_path)
+        validation = validate_pack(pack_path, engine)
         diagnostics.extend(validation.diagnostics)
         if any(d.severity == Severity.ERROR for d in validation.diagnostics):
             return diagnostics

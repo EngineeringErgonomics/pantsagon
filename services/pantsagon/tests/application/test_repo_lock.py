@@ -10,7 +10,7 @@ def test_read_lock_missing(tmp_path):
 
 def test_write_lock_roundtrip(tmp_path):
     lock = {
-        "tool": {"name": "pantsagon", "version": "0.1.0"},
+        "tool": {"name": "pantsagon", "version": "1.0.0"},
         "settings": {
             "renderer": "copier",
             "strict": False,

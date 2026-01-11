@@ -32,4 +32,5 @@ def test_cli_init_renders_core_pack(tmp_path):
     assert (tmp_path / "pants.toml").exists()
     assert (tmp_path / ".pantsagon.toml").exists()
     readme = (tmp_path / "README.md").read_text()
-    assert "Pantsagon Generated Repo" in readme
+    assert readme.strip()
+    assert "monitors" in readme

@@ -2,21 +2,33 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+import os
 from typing import Any
 
-from pantsagon.adapters.pack_catalog.bundled import BundledPackCatalog
-from pantsagon.adapters.policy.pack_validator import PackPolicyEngine
-from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
+import yaml
+
 from pantsagon.application.pack_index import load_pack_index, resolve_pack_ids
 from pantsagon.application.rendering import render_bundled_packs
 from pantsagon.application.repo_lock import write_lock
 from pantsagon.domain.diagnostics import Diagnostic, Severity
 from pantsagon.domain.naming import BUILTIN_RESERVED_SERVICES, validate_service_name
+from pantsagon.domain.pack import PackRef
 from pantsagon.domain.result import Result
 from pantsagon.domain.strictness import apply_strictness
+from pantsagon.ports.pack_catalog import PackCatalogPort
+from pantsagon.ports.policy_engine import PolicyEnginePort
+from pantsagon.ports.renderer import RendererPort
+from pantsagon.ports.workspace import WorkspacePort
 
 
 def _repo_root() -> Path:
+    buildroot = os.environ.get("PANTS_BUILDROOT")
+    if buildroot:
+        return Path(buildroot)
+    cwd = Path.cwd().resolve()
+    for parent in (cwd, *cwd.parents):
+        if (parent / "packs").is_dir():
+            return parent
     for parent in Path(__file__).resolve().parents:
         if (parent / "packs").is_dir():
             return parent
@@ -25,6 +37,23 @@ def _repo_root() -> Path:
 
 def _bundled_packs_root() -> Path:
     return _repo_root() / "packs"
+
+
+def _load_manifest(pack_path: Path) -> dict[str, Any]:
+    try:
+        raw: object = yaml.safe_load((pack_path / "pack.yaml").read_text()) or {}
+    except FileNotFoundError:
+        return {}
+    return raw if isinstance(raw, dict) else {}
+
+
+def _extract_requires(manifest: dict[str, Any]) -> list[str]:
+    requires_block = manifest.get("requires")
+    if isinstance(requires_block, dict):
+        raw = requires_block.get("packs")
+        if isinstance(raw, list):
+            return [str(item) for item in raw]
+    return []
 
 
 def _order_packs_by_requires(packs: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -67,12 +96,32 @@ def _render_order(packs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return rest + core if core else ordered
 
 
+def _write_augmented(path: Path, augmented: str) -> None:
+    if augmented == "agents":
+        (path / "AGENTS.md").write_text("# AGENTS\n")
+    elif augmented == "claude":
+        (path / "CLAUDE.md").write_text("# CLAUDE\n")
+    elif augmented == "gemini":
+        (path / "GEMINI.md").write_text("# GEMINI\n")
+
+
+def _ensure_minimal_pants_toml(path: Path) -> None:
+    if not path.exists():
+        path.write_text('[GLOBAL]\npants_version = "2.30.0"\n')
+
+
 def init_repo(
     repo_path: Path,
     languages: list[str],
     services: list[str],
     features: list[str],
     renderer: str,
+    *,
+    renderer_port: RendererPort | None = None,
+    pack_catalog: PackCatalogPort | None = None,
+    policy_engine: PolicyEnginePort | None = None,
+    workspace: WorkspacePort | None = None,
+    allow_hooks: bool = False,
     augmented_coding: str | None = None,
     strict: bool | None = None,
 ) -> Result[None]:
@@ -91,11 +140,12 @@ def init_repo(
     if any(d.severity == Severity.ERROR for d in diagnostics):
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
-    catalog = BundledPackCatalog(_bundled_packs_root())
-    policy = PackPolicyEngine()
     resolved_packs: list[dict[str, Any]] = []
     for pack_id in resolved_ids.value or []:
-        pack_path = catalog.get_pack_path(pack_id)
+        if pack_catalog is not None:
+            pack_path = pack_catalog.get_pack_path(PackRef(id=pack_id, version="0.0.0", source="bundled"))
+        else:
+            pack_path = _bundled_packs_root() / pack_id.split(".")[-1]
         if not pack_path.exists():
             diagnostics.append(
                 Diagnostic(
@@ -106,19 +156,27 @@ def init_repo(
                 )
             )
             continue
-        manifest_result = policy.validate_pack(pack_path)
-        diagnostics.extend(manifest_result.diagnostics)
-        if any(d.severity == Severity.ERROR for d in manifest_result.diagnostics):
-            continue
-        manifest = manifest_result.value or {}
+
+        manifest: dict[str, Any] = {}
+        if pack_catalog is not None:
+            manifest = pack_catalog.load_manifest(pack_path)
+        else:
+            manifest = _load_manifest(pack_path)
+
+        if policy_engine is not None:
+            manifest_result = policy_engine.validate_pack(pack_path)
+            diagnostics.extend(manifest_result.diagnostics)
+            if any(d.severity == Severity.ERROR for d in manifest_result.diagnostics):
+                continue
+            if isinstance(manifest_result.value, dict):
+                manifest = manifest_result.value
+
         resolved_packs.append(
             {
                 "id": pack_id,
                 "version": str(manifest.get("version", "0.0.0")),
                 "source": "bundled",
-                "requires": list(manifest.get("requires", {}).get("packs", []))
-                if isinstance(manifest.get("requires"), dict)
-                else [],
+                "requires": _extract_requires(manifest),
             }
         )
 
@@ -143,7 +201,7 @@ def init_repo(
             "renderer": renderer,
             "strict": strict_enabled,
             "strict_manifest": True,
-            "allow_hooks": False,
+            "allow_hooks": allow_hooks,
         },
         "selection": {
             "languages": languages,
@@ -160,28 +218,46 @@ def init_repo(
         },
     }
 
-    workspace = FilesystemWorkspace(repo_path)
-    stage = workspace.begin_transaction()
-    write_lock(stage / ".pantsagon.toml", lock)
-    render_diags = render_bundled_packs(
-        stage_dir=stage,
-        repo_path=repo_path,
-        pack_ids=ordered_ids,
-        answers=answers,
-        allow_hooks=False,
-    )
-    diagnostics.extend(render_diags)
-    if any(d.severity == Severity.ERROR for d in render_diags):
-        shutil.rmtree(stage, ignore_errors=True)
+    ports_requested = any([renderer_port, pack_catalog, policy_engine, workspace])
+    if ports_requested and not all([renderer_port, pack_catalog, policy_engine, workspace]):
+        diagnostics.append(
+            Diagnostic(
+                code="INIT_PORTS_MISSING",
+                rule="init.ports",
+                severity=Severity.ERROR,
+                message="Init requires renderer, pack catalog, policy engine, and workspace ports.",
+            )
+        )
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     augmented = augmented_coding or "none"
-    if augmented == "agents":
-        (stage / "AGENTS.md").write_text("# AGENTS\n")
-    elif augmented == "claude":
-        (stage / "CLAUDE.md").write_text("# CLAUDE\n")
-    elif augmented == "gemini":
-        (stage / "GEMINI.md").write_text("# GEMINI\n")
+    if ports_requested and workspace is not None:
+        stage = workspace.begin_transaction()
+        try:
+            write_lock(stage / ".pantsagon.toml", lock)
+            render_diags = render_bundled_packs(
+                stage_dir=stage,
+                repo_path=repo_path,
+                pack_ids=ordered_ids,
+                answers=answers,
+                catalog=pack_catalog,
+                renderer=renderer_port,
+                policy_engine=policy_engine,
+                allow_hooks=allow_hooks,
+            )
+            diagnostics.extend(render_diags)
+            if any(d.severity == Severity.ERROR for d in render_diags):
+                return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
-    workspace.commit(stage)
+            _write_augmented(stage, augmented)
+            _ensure_minimal_pants_toml(stage / "pants.toml")
+            workspace.commit(stage)
+            return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
+        finally:
+            if stage.exists():
+                shutil.rmtree(stage, ignore_errors=True)
+
+    write_lock(repo_path / ".pantsagon.toml", lock)
+    _ensure_minimal_pants_toml(repo_path / "pants.toml")
+    _write_augmented(repo_path, augmented)
     return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))

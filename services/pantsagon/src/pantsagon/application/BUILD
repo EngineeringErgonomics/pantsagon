@@ -11,6 +11,7 @@ __dependencies_rules__(
         "//services/pantsagon/src/pantsagon:pkg",
         "//services/pantsagon/src/pantsagon/__init__.py",
         "//shared/foundation/src/**",
+        "//3rdparty/python/**",
         "!*",
     ),
 )

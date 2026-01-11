@@ -24,4 +24,5 @@ pantsagon = "pantsagon.entrypoints.cli:app"
 
 [tool.pytest.ini_options]
 addopts = "-q --import-mode=importlib"
-pythonpath = ["services/pantsagon/src", "tools/forbidden_imports/src", "."]
+pythonpath = ["services/pantsagon/src", "tools/forbidden_imports/src", "scripts", "."]
+asyncio_default_fixture_loop_scope = "function"

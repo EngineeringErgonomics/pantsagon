@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts import generate_schema_docs
+import generate_schema_docs
 
 
 class GenerateSchemaDocsTest(unittest.TestCase):

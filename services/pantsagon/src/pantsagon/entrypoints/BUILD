@@ -20,6 +20,7 @@ __dependencies_rules__(
         "//services/pantsagon/src/pantsagon/__init__.py",
         "//shared/foundation/src/**",
         "//shared/adapters/**",
+        "//packs/**",
         "//3rdparty/python/**",
         "!*",
     ),
@@ -34,5 +35,6 @@ python_sources(
         "//services/pantsagon/src/pantsagon/ports:ports",
         "//services/pantsagon/src/pantsagon/domain:domain",
         "//shared/foundation/src:lib",
+        "//packs:bundled",
     ],
 )

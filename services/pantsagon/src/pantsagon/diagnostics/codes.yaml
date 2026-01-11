@@ -37,6 +37,12 @@ codes:
     message: Selection does not match resolved pack set.
     hint: Update selection or re-resolve packs to align.
 
+  - code: INIT_PORTS_MISSING
+    severity: error
+    rule: init.ports
+    message: Init requires renderer, pack catalog, policy engine, and workspace ports.
+    hint: Ensure the entrypoint wires required adapters for init.
+
   - code: PACK_INDEX_UNKNOWN_LANGUAGE
     severity: error
     rule: pack.index.language

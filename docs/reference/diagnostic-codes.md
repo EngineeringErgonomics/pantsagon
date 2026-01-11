@@ -3,7 +3,7 @@
 
 # Diagnostic codes
 
-This page is generated from `pantsagon/diagnostics/codes.yaml`.
+This page is generated from `services/pantsagon/src/pantsagon/diagnostics/codes.yaml`.
 
 | Code | Severity | Rule | Message | Hint |
 |---|---|---|---|---|
@@ -11,6 +11,7 @@ This page is generated from `pantsagon/diagnostics/codes.yaml`.
 | `COPIER_UNDECLARED_VARIABLE` | `error` | `pack.variables.copier_undeclared` | Copier defines a variable that is not declared in pack.yaml. | Declare it in pack.yaml.variables or remove it from copier.yml. |
 | `FEATURE_NAME_INVALID` | `error` | `naming.feature.format` | Feature name format is invalid. | Use lowercase kebab-case or snake_case with no dots. |
 | `FEATURE_NAME_SHADOWS_PACK` | `warn` | `naming.feature.shadows_pack` | Feature name shadows a pack id. | Rename the feature to avoid confusion with pack identifiers. |
+| `INIT_PORTS_MISSING` | `error` | `init.ports` | Init requires renderer, pack catalog, policy engine, and workspace ports. | Ensure the entrypoint wires required adapters for init. |
 | `LOCK_MISSING` | `error` | `lock.exists` | Repo lock file is missing. | Run pantsagon init or restore .pantsagon.toml. |
 | `LOCK_PACK_DUPLICATE` | `error` | `lock.resolved.packs` | Repo lock contains duplicate pack entries. | Remove duplicate pack ids from resolved.packs. |
 | `LOCK_PACK_INVALID` | `error` | `lock.resolved.packs` | Repo lock contains an invalid pack entry. | Ensure each pack has id, version, and source. |

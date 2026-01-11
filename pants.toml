@@ -1,5 +1,6 @@
 [GLOBAL]
 pants_version = "2.30.0"
+build_patterns = ["BUILD"]
 backend_packages = [
   "pants.backend.python",
   "pants.backend.shell",
@@ -28,8 +29,10 @@ root_patterns = [
   "shared/**/tests",
   "services/**/tests",
   "tools/**/tests",
+  "tools/forbidden_imports",
   "shared/**/contracts",
   "packs",
+  "scripts",
   "shared/contracts",
 ]
 

@@ -1,22 +1,33 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 from typing import Any
 
-from pantsagon.adapters.policy.pack_validator import PackPolicyEngine
+import yaml
+
 from pantsagon.application.pack_index import load_pack_index, resolve_pack_ids
 from pantsagon.application.repo_lock import effective_strict, project_reserved_services, read_lock
 from pantsagon.domain.diagnostics import Diagnostic, FileLocation, Severity, ValueLocation
 from pantsagon.domain.naming import (
     BUILTIN_RESERVED_SERVICES,
     validate_feature_name,
+    validate_pack_id,
     validate_service_name,
 )
 from pantsagon.domain.result import Result
 from pantsagon.domain.strictness import apply_strictness
+from pantsagon.ports.policy_engine import PolicyEnginePort
 
 
 def _repo_root() -> Path:
+    buildroot = os.environ.get("PANTS_BUILDROOT")
+    if buildroot:
+        return Path(buildroot)
+    cwd = Path.cwd().resolve()
+    for parent in (cwd, *cwd.parents):
+        if (parent / "packs").is_dir():
+            return parent
     for parent in Path(__file__).resolve().parents:
         if (parent / "packs").is_dir():
             return parent
@@ -35,6 +46,14 @@ def _get_list(value: Any) -> list[Any]:
     return list(value) if isinstance(value, list) else []
 
 
+def _load_manifest(pack_path: Path) -> dict[str, Any]:
+    try:
+        raw: object = yaml.safe_load((pack_path / "pack.yaml").read_text()) or {}
+    except FileNotFoundError:
+        return {}
+    return raw if isinstance(raw, dict) else {}
+
+
 def _maybe_warn_feature_shadow(feature: str, pack_ids: set[str]) -> Diagnostic | None:
     if feature in pack_ids:
         return Diagnostic(
@@ -48,7 +67,11 @@ def _maybe_warn_feature_shadow(feature: str, pack_ids: set[str]) -> Diagnostic |
     return None
 
 
-def validate_repo(repo_path: Path, strict: bool | None = None) -> Result[None]:
+def validate_repo(
+    repo_path: Path,
+    strict: bool | None = None,
+    policy_engine: PolicyEnginePort | None = None,
+) -> Result[None]:
     diagnostics: list[Diagnostic] = []
     lock_result = read_lock(repo_path / ".pantsagon.toml")
     diagnostics.extend(lock_result.diagnostics)
@@ -120,6 +143,7 @@ def validate_repo(repo_path: Path, strict: bool | None = None) -> Result[None]:
             )
             continue
         pack_id = str(pack_id)
+        diagnostics.extend(validate_pack_id(pack_id))
         if pack_id in seen:
             diagnostics.append(
                 Diagnostic(
@@ -138,7 +162,6 @@ def validate_repo(repo_path: Path, strict: bool | None = None) -> Result[None]:
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     pack_id_set = set(pack_ids)
-    policy = PackPolicyEngine()
     for entry in pack_entries:
         pack_id = str(entry.get("id"))
         source = str(entry.get("source"))
@@ -190,9 +213,15 @@ def validate_repo(repo_path: Path, strict: bool | None = None) -> Result[None]:
             )
             continue
 
-        manifest_result = policy.validate_pack(pack_path)
-        diagnostics.extend(manifest_result.diagnostics)
-        manifest = manifest_result.value or {}
+        manifest: dict[str, Any] = {}
+        if policy_engine is not None:
+            manifest_result = policy_engine.validate_pack(pack_path)
+            diagnostics.extend(manifest_result.diagnostics)
+            if isinstance(manifest_result.value, dict):
+                manifest = manifest_result.value
+        if not manifest:
+            manifest = _load_manifest(pack_path)
+
         compatibility = manifest.get("compatibility")
         if compatibility is not None and not isinstance(compatibility, dict):
             diagnostics.append(
@@ -245,9 +274,7 @@ def validate_repo(repo_path: Path, strict: bool | None = None) -> Result[None]:
     reserved = project_reserved_services(lock)
     for svc in services:
         svc_name = str(svc)
-        diagnostics.extend(
-            validate_service_name(svc_name, BUILTIN_RESERVED_SERVICES, reserved)
-        )
+        diagnostics.extend(validate_service_name(svc_name, BUILTIN_RESERVED_SERVICES, reserved))
         svc_root = repo_path / "services" / svc_name
         if not svc_root.exists():
             diagnostics.append(

@@ -12,6 +12,8 @@ class GenerateSchemaDocsTest(unittest.TestCase):
             repo_root = Path(tmpdir)
             schemas_dir = repo_root / "schemas"
             schemas_dir.mkdir(parents=True)
+            contracts_dir = repo_root / "shared" / "contracts" / "schemas"
+            contracts_dir.mkdir(parents=True)
             (repo_root / "docs" / "reference").mkdir(parents=True)
 
             def write_schema(name: str, title: str) -> None:
@@ -30,7 +32,20 @@ class GenerateSchemaDocsTest(unittest.TestCase):
                     encoding="utf-8",
                 )
 
-            write_schema("pack.schema.v1.json", "Pack Schema")
+            (contracts_dir / "pack.schema.v1.json").write_text(
+                json.dumps(
+                    {
+                        "$schema": "https://json-schema.org/draft/2020-12/schema",
+                        "$id": "https://example.test/pack.schema.v1.json",
+                        "title": "Pack Schema",
+                        "description": "Pack Schema description",
+                        "type": "object",
+                        "properties": {"alpha": {"type": "string"}},
+                        "required": ["alpha"],
+                    }
+                ),
+                encoding="utf-8",
+            )
             write_schema("repo-lock.schema.v1.json", "Repo Lock Schema")
             write_schema("result.schema.v1.json", "Result Schema")
 

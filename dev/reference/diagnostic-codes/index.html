@@ -1363,6 +1363,20 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 <td>Declare it in pack.yaml.variables or remove it from copier.yml.</td>
 </tr>
 <tr>
+<td><code>FEATURE_NAME_INVALID</code></td>
+<td><code>error</code></td>
+<td><code>naming.feature.format</code></td>
+<td>Feature name format is invalid.</td>
+<td>Use lowercase kebab-case or snake_case with no dots.</td>
+</tr>
+<tr>
+<td><code>FEATURE_NAME_SHADOWS_PACK</code></td>
+<td><code>warn</code></td>
+<td><code>naming.feature.shadows_pack</code></td>
+<td>Feature name shadows a pack id.</td>
+<td>Rename the feature to avoid confusion with pack identifiers.</td>
+</tr>
+<tr>
 <td><code>LOCK_MISSING</code></td>
 <td><code>error</code></td>
 <td><code>lock.exists</code></td>
@@ -1419,6 +1433,13 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 <td>Ensure pack.yaml and copier.yml exist in the pack directory.</td>
 </tr>
 <tr>
+<td><code>PACK_ID_INVALID</code></td>
+<td><code>error</code></td>
+<td><code>naming.pack.id</code></td>
+<td>Pack id format is invalid.</td>
+<td>Use lowercase dot-namespaced ids (e.g. pantsagon.core).</td>
+</tr>
+<tr>
 <td><code>PACK_INDEX_UNKNOWN_FEATURE</code></td>
 <td><code>error</code></td>
 <td><code>pack.index.feature</code></td>
@@ -1473,6 +1494,27 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 <td><code>repo.service.exists</code></td>
 <td>Service directory is missing for a declared service.</td>
 <td>Regenerate the service or remove it from selection.</td>
+</tr>
+<tr>
+<td><code>SERVICE_NAME_INVALID</code></td>
+<td><code>error</code></td>
+<td><code>naming.service.format</code></td>
+<td>Service name format is invalid.</td>
+<td>Use lowercase kebab-case without leading, trailing, or doubled dashes.</td>
+</tr>
+<tr>
+<td><code>SERVICE_NAME_RESERVED</code></td>
+<td><code>error</code></td>
+<td><code>naming.service.reserved</code></td>
+<td>Service name is reserved.</td>
+<td>Choose a different name or add project-level reserved names in .pantsagon.toml.</td>
+</tr>
+<tr>
+<td><code>VARIABLE_NAME_INVALID</code></td>
+<td><code>error</code></td>
+<td><code>naming.variable.format</code></td>
+<td>Variable name format is invalid.</td>
+<td>Use a valid identifier (letters, numbers, underscore) starting with a letter or underscore.</td>
 </tr>
 </tbody>
 </table>

@@ -1336,7 +1336,7 @@
 Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 </blockquote>
 <h1 id="diagnostic-codes">Diagnostic codes<a class="headerlink" href="#diagnostic-codes" title="Permanent link">&para;</a></h1>
-<p>This page is generated from <code>pantsagon/diagnostics/codes.yaml</code>.</p>
+<p>This page is generated from <code>services/pantsagon/src/pantsagon/diagnostics/codes.yaml</code>.</p>
 <table>
 <thead>
 <tr>
@@ -1375,6 +1375,13 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 <td><code>naming.feature.shadows_pack</code></td>
 <td>Feature name shadows a pack id.</td>
 <td>Rename the feature to avoid confusion with pack identifiers.</td>
+</tr>
+<tr>
+<td><code>INIT_PORTS_MISSING</code></td>
+<td><code>error</code></td>
+<td><code>init.ports</code></td>
+<td>Init requires renderer, pack catalog, policy engine, and workspace ports.</td>
+<td>Ensure the entrypoint wires required adapters for init.</td>
 </tr>
 <tr>
 <td><code>LOCK_MISSING</code></td>

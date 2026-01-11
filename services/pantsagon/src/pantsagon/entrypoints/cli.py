@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 import typer
 
@@ -15,6 +16,16 @@ app = typer.Typer(add_completion=False)
 
 
 def _packs_root() -> Path:
+    buildroot = os.environ.get("PANTS_BUILDROOT")
+    if buildroot:
+        packs_dir = Path(buildroot) / "packs"
+        if packs_dir.is_dir():
+            return packs_dir
+    cwd = Path.cwd().resolve()
+    for parent in (cwd, *cwd.parents):
+        packs_dir = parent / "packs"
+        if packs_dir.is_dir():
+            return packs_dir
     for parent in Path(__file__).resolve().parents:
         packs_dir = parent / "packs"
         if packs_dir.is_dir():

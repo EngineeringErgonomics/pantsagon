@@ -23,14 +23,15 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: docs-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  docs:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -67,42 +68,16 @@ jobs:
           mkdocs build --strict
 
       - name: Configure git identity
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Publish PR preview
-        if: github.event_name == 'pull_request'
-        env:
-          PR_NUM: ${{ github.event.number }}
-        run: |
-          mike deploy --push --branch gh-pages "pr-${PR_NUM}"
-
-      - name: Comment PR preview URL
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const pr = context.payload.pull_request.number;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const url = `https://${owner}.github.io/${repo}/pr-${pr}/`;
-            const body = [
-              "Docs preview published:",
-              "",
-              url
-            ].join("\n");
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number: pr,
-              body
-            });
 
       - name: Publish dev docs (main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           mike deploy --push --branch gh-pages "dev"
+          mike set-default --push --branch gh-pages "dev"
 
       - name: Publish release docs (tag) + update latest
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -110,3 +85,28 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           mike deploy --push --branch gh-pages --update-aliases "${TAG}" latest
+          mike set-default --push --branch gh-pages latest
+
+      - name: Export Pages site
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        run: |
+          rm -rf site
+          mkdir site
+          git archive --format=tar gh-pages | tar -x -C site
+
+      - name: Upload Pages artifact
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -27,6 +27,14 @@ mkdocs serve
 Generated reference docs must not be edited by hand.
 Run the scripts above to update them.
 
+## Publishing (CI)
+
+Docs publish via GitHub Pages (GitHub Actions) in `.github/workflows/docs.yml`.
+
+- `main` deploys `dev` and sets it as the default version
+- tags deploy `vX.Y.Z`, update `latest`, and set the default to `latest`
+- PRs run validation only (no published preview)
+
 ## Backlog
 
-- Docs: remove PR preview versions from mike on PR close
+- Docs: if PR previews are reintroduced, add cleanup on PR close

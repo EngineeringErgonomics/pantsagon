@@ -12,7 +12,7 @@ def _repo_root() -> Path:
     if buildroot:
         return Path(buildroot)
     for parent in Path(__file__).resolve().parents:
-        if (parent / "packs").exists():
+        if (parent / "pants.toml").exists() and (parent / "packs").is_dir():
             return parent
     pytest.skip("Could not locate repo root")
     return Path(".")

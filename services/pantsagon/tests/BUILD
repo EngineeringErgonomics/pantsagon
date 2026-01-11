@@ -12,6 +12,7 @@ python_tests(
         "//services/pantsagon/src/pantsagon/application:application",
         "//services/pantsagon/src/pantsagon/ports:ports",
         "//services/pantsagon/src/pantsagon/domain:domain",
+        "//packs:bundled",
     ],
     tags=["svc:pantsagon"],
 )
@@ -37,6 +38,8 @@ python_tests(
         "//services/pantsagon/src/pantsagon/application:application",
         "//services/pantsagon/src/pantsagon/ports:ports",
         "//services/pantsagon/src/pantsagon/domain:domain",
+        "//packs:bundled",
+        "//shared/contracts:schemas",
     ],
     tags=["svc:pantsagon"],
 )
@@ -78,6 +81,8 @@ python_tests(
     sources=["e2e/**/*.py"],
     dependencies=[
         "//services/pantsagon/src/pantsagon/entrypoints:entrypoints",
+        "//packs:bundled",
+        "//shared/contracts:schemas",
     ],
     tags=["svc:pantsagon"],
 )

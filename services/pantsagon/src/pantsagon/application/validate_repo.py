@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 from typing import Any
 
 import yaml
@@ -20,6 +21,13 @@ from pantsagon.ports.policy_engine import PolicyEnginePort
 
 
 def _repo_root() -> Path:
+    buildroot = os.environ.get("PANTS_BUILDROOT")
+    if buildroot:
+        return Path(buildroot)
+    cwd = Path.cwd().resolve()
+    for parent in (cwd, *cwd.parents):
+        if (parent / "packs").is_dir():
+            return parent
     for parent in Path(__file__).resolve().parents:
         if (parent / "packs").is_dir():
             return parent

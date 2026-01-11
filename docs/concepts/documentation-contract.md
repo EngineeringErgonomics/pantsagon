@@ -16,9 +16,18 @@ Every release must include:
 Documentation is published per tool version:
 
 - `dev` - tracks `main`
-- `latest` - alias for the newest release
+- `latest` - alias for the newest release (updated on tags)
 - `vX.Y.Z` - tagged releases
-- `pr-<num>` - PR previews
+
+PR builds validate docs but do not publish previews.
+
+## Publishing (CI)
+
+Docs are published via GitHub Pages (GitHub Actions) in `.github/workflows/docs.yml`.
+
+- `main` deploys `dev` and sets it as the default version
+- tags deploy `vX.Y.Z`, update `latest`, and set the default to `latest`
+- mike writes versioned output to the `gh-pages` branch, which is then deployed via Pages
 
 ## Local docs workflow
 
@@ -42,4 +51,4 @@ If you need to change reference docs, update the source files and re-run the gen
 
 ## Backlog
 
-- Docs: remove PR preview versions from mike on PR close
+- Docs: if PR previews are reintroduced, add cleanup on PR close

@@ -80,11 +80,16 @@ pantsagon init <repo> \
   --services a,b \
   --feature openapi --feature docker \
   --augmented-coding {agents|claude|gemini|none}
+
+pantsagon add_service <name> \
+  --lang python
+
+pantsagon validate --json
 ```
 
-Planned (designed, not yet wired):
-- `pantsagon add service <name>`
-- `pantsagon validate`
+Notes:
+- `validate` returns non‑zero when `.pantsagon.toml` is missing.
+- `--json` prints a structured Result payload.
 
 ## Packs
 

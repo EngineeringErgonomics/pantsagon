@@ -1,6 +1,6 @@
 # Pantsagon
 
-[![CI](https://github.com/EngineeringErgonomics/pantsagon/actions/workflows/ci.yml/badge.svg)](https://github.com/EngineeringErgonomics/pantsagon/actions/workflows/ci.yml) [![Docs](https://github.com/EngineeringErgonomics/pantsagon/actions/workflows/docs.yml/badge.svg)](https://github.com/EngineeringErgonomics/pantsagon/actions/workflows/docs.yml) [![Codecov](https://codecov.io/gh/EngineeringErgonomics/pantsagon/branch/main/graph/badge.svg)](https://codecov.io/gh/EngineeringErgonomics/pantsagon)
+[![CI](https://github.com/EngineeringErgonomics/pantsagon/actions/workflows/ci.yml/badge.svg)](https://github.com/EngineeringErgonomics/pantsagon/actions/workflows/ci.yml) [![Docs](https://github.com/EngineeringErgonomics/pantsagon/actions/workflows/docs.yml/badge.svg)](https://github.com/EngineeringErgonomics/pantsagon/actions/workflows/docs.yml) [![Codecov](https://codecov.io/gh/EngineeringErgonomics/pantsagon/branch/main/graph/badge.svg)](https://codecov.io/gh/EngineeringErgonomics/pantsagon) [![License](https://img.shields.io/github/license/EngineeringErgonomics/pantsagon)](LICENSE)
 
 Hexagonal monorepos, generated with enforcement.
 

@@ -31,6 +31,9 @@ theme:
 plugins:
   - search
 
+exclude_docs: |
+  plans/**
+
 markdown_extensions:
   - admonition
   - attr_list

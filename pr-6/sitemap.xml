@@ -2,154 +2,158 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/cli/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/cli/add-service/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/cli/exit-codes/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/cli/init/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/cli/validate/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/concepts/architecture/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/concepts/diagnostics/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/concepts/documentation-contract/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/concepts/hexagonal-architecture/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/concepts/packs/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/concepts/repo-lock/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/concepts/trust-and-security/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/contributing/docs/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/getting-started/faq/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/getting-started/generated-repo-tour/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/getting-started/quickstart/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/pack-authoring/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/pack-authoring/pack-format/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/pack-authoring/publishing/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/pack-authoring/validation/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/pack-authoring/variables/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plans/2026-01-10-docs-system/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plans/2026-01-10-m4-real-pack-content/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plans/2026-01-10-pants-monorepo-conversion-design/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
+    </url>
+    <url>
+         <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plans/2026-01-10-pants-monorepo-conversion/</loc>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plans/2026-01-10-pantsagon-cli-design/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plans/2026-01-10-pantsagon-cli-plan/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plans/2026-01-10-pantsagon-m2-cli-plan/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plans/2026-01-10-pantsagon-v1-checklist/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plans/2026-01-10-pantsagon-v1-impl-plan/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plugin-authoring/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plugin-authoring/adapters/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plugin-authoring/discovery/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/plugin-authoring/ports/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/reference/diagnostic-codes/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/reference/pack.schema.v1/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/reference/repo-lock.schema.v1/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
     <url>
          <loc>https://engineeringergonomics.github.io/pantsagon/pr-6/reference/result.schema.v1/</loc>
-         <lastmod>2026-01-10</lastmod>
+         <lastmod>2026-01-11</lastmod>
     </url>
 </urlset>

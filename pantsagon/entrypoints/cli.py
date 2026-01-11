@@ -1,38 +1,13 @@
-from dataclasses import asdict
 from pathlib import Path
 
 import typer
 
 from pantsagon.application.add_service import add_service as add_service_use_case
 from pantsagon.application.init_repo import init_repo
+from pantsagon.application.result_serialization import serialize_result
 from pantsagon.application.validate_repo import validate_repo
 
 app = typer.Typer(add_completion=False)
-
-
-def _serialize_result(result) -> dict:
-    diagnostics = []
-    for d in result.diagnostics:
-        payload = {
-            "id": d.id,
-            "code": d.code,
-            "rule": d.rule,
-            "severity": d.severity.value,
-            "message": d.message,
-        }
-        if d.location is not None:
-            payload["location"] = asdict(d.location)
-        if d.hint is not None:
-            payload["hint"] = d.hint
-        if d.details is not None:
-            payload["details"] = d.details
-        diagnostics.append(payload)
-    return {
-        "result_schema_version": 1,
-        "exit_code": result.exit_code,
-        "diagnostics": diagnostics,
-        "artifacts": result.artifacts,
-    }
 
 
 @app.command(hidden=True)
@@ -68,7 +43,10 @@ def init(
 def validate(json: bool = False, strict: bool | None = typer.Option(None, "--strict")):
     result = validate_repo(Path("."), strict=strict)
     if json:
-        typer.echo(__import__("json").dumps(_serialize_result(result)))
+        data = serialize_result(result, command="validate", args=[])
+        import json as _json
+
+        typer.echo(_json.dumps(data))
     raise typer.Exit(result.exit_code)
 
 

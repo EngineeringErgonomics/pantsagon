@@ -19,7 +19,6 @@ def add_service(repo_path: Path, name: str, lang: str, strict: bool | None = Non
     )
     if any(d.severity == Severity.ERROR for d in diagnostics):
         return Result(diagnostics=apply_strictness(diagnostics, effective_strict(strict, lock)))
-
     svc_dir = repo_path / "services" / name
     if svc_dir.exists():
         diagnostics.append(

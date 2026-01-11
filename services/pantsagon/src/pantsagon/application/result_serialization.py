@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from pantsagon.domain.diagnostics import Diagnostic, FileLocation
+from pantsagon.domain.diagnostics import FileLocation
 from pantsagon.domain.result import Result
 
 

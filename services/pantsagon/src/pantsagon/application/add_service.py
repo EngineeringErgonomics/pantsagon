@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pantsagon.application.repo_lock import effective_strict, load_repo_lock, project_reserved_services
+from pantsagon.application.repo_lock import effective_strict, project_reserved_services, read_lock
 from pantsagon.domain.diagnostics import Diagnostic, Severity
 from pantsagon.domain.naming import BUILTIN_RESERVED_SERVICES, validate_service_name
 from pantsagon.domain.result import Result
@@ -9,8 +9,9 @@ from pantsagon.domain.strictness import apply_strictness
 
 def add_service(repo_path: Path, name: str, lang: str, strict: bool | None = None) -> Result[None]:
     diagnostics = []
-    lock, lock_diags = load_repo_lock(repo_path)
-    diagnostics.extend(lock_diags)
+    lock_result = read_lock(repo_path / ".pantsagon.toml")
+    diagnostics.extend(lock_result.diagnostics)
+    lock = lock_result.value
     if lock is None:
         return Result(diagnostics=apply_strictness(diagnostics, effective_strict(strict, lock)))
 

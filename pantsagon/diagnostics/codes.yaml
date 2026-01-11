@@ -1,6 +1,78 @@
 version: 1
 
 codes:
+  - code: LOCK_MISSING
+    severity: error
+    rule: lock.exists
+    message: Repo lock file is missing.
+    hint: Run pantsagon init or restore .pantsagon.toml.
+
+  - code: LOCK_PARSE_FAILED
+    severity: error
+    rule: lock.parse
+    message: Repo lock file could not be parsed.
+    hint: Fix invalid TOML in .pantsagon.toml.
+
+  - code: LOCK_SECTION_MISSING
+    severity: error
+    rule: lock.section
+    message: Repo lock is missing a required section.
+    hint: Regenerate the repo lock or repair the missing section.
+
+  - code: LOCK_PACK_INVALID
+    severity: error
+    rule: lock.resolved.packs
+    message: Repo lock contains an invalid pack entry.
+    hint: Ensure each pack has id, version, and source.
+
+  - code: LOCK_PACK_DUPLICATE
+    severity: error
+    rule: lock.resolved.packs
+    message: Repo lock contains duplicate pack entries.
+    hint: Remove duplicate pack ids from resolved.packs.
+
+  - code: LOCK_SELECTION_MISMATCH
+    severity: warn
+    rule: lock.selection
+    message: Selection does not match resolved pack set.
+    hint: Update selection or re-resolve packs to align.
+
+  - code: PACK_INDEX_UNKNOWN_LANGUAGE
+    severity: error
+    rule: pack.index.language
+    message: Selection language is not defined in the pack index.
+    hint: Add the language mapping to packs/_index.json.
+
+  - code: PACK_INDEX_UNKNOWN_FEATURE
+    severity: error
+    rule: pack.index.feature
+    message: Selection feature is not defined in the pack index.
+    hint: Add the feature mapping to packs/_index.json.
+
+  - code: PACK_LOCATION_MISSING
+    severity: error
+    rule: pack.catalog.fetch
+    message: Local pack is missing a location.
+    hint: Set location for local pack refs in the lock.
+
+  - code: PACK_COMPAT_INVALID
+    severity: error
+    rule: pack.compatibility
+    message: Pack compatibility metadata is invalid.
+    hint: Ensure compatibility.pants is a string.
+
+  - code: REPO_SERVICE_MISSING
+    severity: error
+    rule: repo.service.exists
+    message: Service directory is missing for a declared service.
+    hint: Regenerate the service or remove it from selection.
+
+  - code: REPO_LAYER_MISSING
+    severity: error
+    rule: repo.layer.exists
+    message: Service layer directory is missing.
+    hint: Regenerate the service skeleton or fix the layout.
+
   - code: PACK_NOT_FOUND
     severity: error
     rule: pack.catalog.fetch
@@ -25,6 +97,24 @@ codes:
     message: Copier default does not match pack.yaml default.
     hint: Align defaults, or run in strict mode to fail builds.
 
+  - code: PACK_FILE_MISSING
+    severity: error
+    rule: pack.files
+    message: Pack is missing a required file.
+    hint: Ensure pack.yaml and copier.yml exist in the pack directory.
+
+  - code: PACK_RENDER_FAILED
+    severity: error
+    rule: pack.render
+    message: Pack render failed.
+    hint: Check Copier templates and inputs.
+
+  - code: PACK_ID_INVALID
+    severity: error
+    rule: naming.pack.id
+    message: Pack id format is invalid.
+    hint: Use lowercase dot-namespaced ids (e.g. pantsagon.core).
+
   - code: FEATURE_NAME_INVALID
     severity: error
     rule: naming.feature.format
@@ -36,24 +126,6 @@ codes:
     rule: naming.feature.shadows_pack
     message: Feature name shadows a pack id.
     hint: Rename the feature to avoid confusion with pack identifiers.
-
-  - code: LOCK_INVALID
-    severity: error
-    rule: repo.lock.invalid
-    message: Repo lock (.pantsagon.toml) is invalid.
-    hint: Fix the TOML syntax or regenerate the repo lock with init.
-
-  - code: LOCK_MISSING
-    severity: error
-    rule: repo.lock.missing
-    message: Repo lock (.pantsagon.toml) is missing.
-    hint: Run init to create a new repo lock file.
-
-  - code: PACK_ID_INVALID
-    severity: error
-    rule: naming.pack.id
-    message: Pack id format is invalid.
-    hint: Use lowercase dot-namespaced ids (e.g. pantsagon.core).
 
   - code: SERVICE_NAME_INVALID
     severity: error

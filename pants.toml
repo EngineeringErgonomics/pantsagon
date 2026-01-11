@@ -45,5 +45,8 @@ resolves = { python-default = "3rdparty/python/python-default.lock" }
 [python-infer]
 unowned_dependency_behavior = "error"
 
+[coverage-py]
+report = ["xml"]
+
 [visibility]
 enforce = true

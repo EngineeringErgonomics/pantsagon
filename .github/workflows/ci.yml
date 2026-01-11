@@ -20,4 +20,11 @@ jobs:
           named-caches-hash: ${{ hashFiles('3rdparty/python/requirements.txt', 'docs/requirements.txt') }}
       - name: Pants test
         run: |
-          pants test ::
+          pants test --test-use-coverage ::
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: dist/coverage/python/coverage.xml
+          flags: pants
+          name: pants
+          fail_ci_if_error: false

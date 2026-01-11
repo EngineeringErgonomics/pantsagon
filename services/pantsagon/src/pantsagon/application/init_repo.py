@@ -11,7 +11,9 @@ from pantsagon.application.pack_index import load_pack_index, resolve_pack_ids
 from pantsagon.application.rendering import render_bundled_packs
 from pantsagon.application.repo_lock import write_lock
 from pantsagon.domain.diagnostics import Diagnostic, Severity
+from pantsagon.domain.naming import BUILTIN_RESERVED_SERVICES, validate_service_name
 from pantsagon.domain.result import Result
+from pantsagon.domain.strictness import apply_strictness
 
 
 def _repo_root() -> Path:
@@ -72,15 +74,22 @@ def init_repo(
     features: list[str],
     renderer: str,
     augmented_coding: str | None = None,
+    strict: bool | None = None,
 ) -> Result[None]:
     diagnostics: list[Diagnostic] = []
+    strict_enabled = bool(strict)
+    for service in services:
+        diagnostics.extend(validate_service_name(service, BUILTIN_RESERVED_SERVICES, set()))
+    if any(d.severity == Severity.ERROR for d in diagnostics):
+        return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
+
     repo_root = _repo_root()
     index_path = repo_root / "packs" / "_index.json"
     index = load_pack_index(index_path)
     resolved_ids = resolve_pack_ids(index, languages=languages, features=features)
     diagnostics.extend(resolved_ids.diagnostics)
     if any(d.severity == Severity.ERROR for d in diagnostics):
-        return Result(diagnostics=diagnostics)
+        return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     catalog = BundledPackCatalog(_bundled_packs_root())
     policy = PackPolicyEngine()
@@ -114,7 +123,7 @@ def init_repo(
         )
 
     if any(d.severity == Severity.ERROR for d in diagnostics):
-        return Result(diagnostics=diagnostics)
+        return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     service_packages = {name: name.replace("-", "_") for name in services}
     service_name = services[0] if services else "service"
@@ -132,7 +141,7 @@ def init_repo(
         "tool": {"name": "pantsagon", "version": "0.1.0"},
         "settings": {
             "renderer": renderer,
-            "strict": False,
+            "strict": strict_enabled,
             "strict_manifest": True,
             "allow_hooks": False,
         },
@@ -164,7 +173,7 @@ def init_repo(
     diagnostics.extend(render_diags)
     if any(d.severity == Severity.ERROR for d in render_diags):
         shutil.rmtree(stage, ignore_errors=True)
-        return Result(diagnostics=diagnostics)
+        return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     augmented = augmented_coding or "none"
     if augmented == "agents":
@@ -175,4 +184,4 @@ def init_repo(
         (stage / "GEMINI.md").write_text("# GEMINI\n")
 
     workspace.commit(stage)
-    return Result(diagnostics=diagnostics)
+    return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))

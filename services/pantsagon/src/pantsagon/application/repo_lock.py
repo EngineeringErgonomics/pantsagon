@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import tomllib
+from pathlib import Path
 from typing import Any
 
 from pantsagon.domain.diagnostics import Diagnostic, FileLocation, Severity
@@ -96,7 +96,23 @@ def _fallback_dumps(lock: LockDict) -> str:
 def write_lock(path: Path, lock: LockDict) -> None:
     try:
         import tomli_w
+
         content = tomli_w.dumps(lock)
     except ModuleNotFoundError:
         content = _fallback_dumps(lock)
     path.write_text(content, encoding="utf-8")
+
+
+def effective_strict(cli_strict: bool | None, lock: dict | None) -> bool:
+    if cli_strict is not None:
+        return cli_strict
+    if lock is None:
+        return False
+    return bool(lock.get("settings", {}).get("strict", False))
+
+
+def project_reserved_services(lock: dict | None) -> set[str]:
+    if not lock:
+        return set()
+    naming = lock.get("settings", {}).get("naming", {})
+    return set(naming.get("reserved_services", []) or [])

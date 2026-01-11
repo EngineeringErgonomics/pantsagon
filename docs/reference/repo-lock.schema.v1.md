@@ -107,7 +107,7 @@ Single source of truth for a Pantsagon-generated repository.
         },
         "services": {
           "items": {
-            "pattern": "^[a-z][a-z0-9-]*$",
+            "pattern": "^[a-z](?:[a-z0-9]*(-[a-z0-9]+)*)$",
             "type": "string"
           },
           "type": "array"
@@ -122,6 +122,19 @@ Single source of truth for a Pantsagon-generated repository.
           "default": false,
           "description": "Whether pack hooks are allowed to execute.",
           "type": "boolean"
+        },
+        "naming": {
+          "additionalProperties": false,
+          "properties": {
+            "reserved_services": {
+              "description": "Project-specific additional reserved service names.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
         },
         "renderer": {
           "default": "copier",

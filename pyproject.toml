@@ -23,5 +23,5 @@ dev = ["pytest>=8.0", "pytest-cov>=5.0"]
 pantsagon = "pantsagon.entrypoints.cli:app"
 
 [tool.pytest.ini_options]
-addopts = "-q"
+addopts = "-q --import-mode=importlib"
 pythonpath = ["services/pantsagon/src", "tools/forbidden_imports/src", "."]

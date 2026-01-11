@@ -5,9 +5,15 @@ from typing import Any
 
 from pantsagon.adapters.policy.pack_validator import PackPolicyEngine
 from pantsagon.application.pack_index import load_pack_index, resolve_pack_ids
-from pantsagon.application.repo_lock import read_lock
-from pantsagon.domain.diagnostics import Diagnostic, FileLocation, Severity
+from pantsagon.application.repo_lock import effective_strict, project_reserved_services, read_lock
+from pantsagon.domain.diagnostics import Diagnostic, FileLocation, Severity, ValueLocation
+from pantsagon.domain.naming import (
+    BUILTIN_RESERVED_SERVICES,
+    validate_feature_name,
+    validate_service_name,
+)
 from pantsagon.domain.result import Result
+from pantsagon.domain.strictness import apply_strictness
 
 
 def _repo_root() -> Path:
@@ -29,12 +35,26 @@ def _get_list(value: Any) -> list[Any]:
     return list(value) if isinstance(value, list) else []
 
 
-def validate_repo(repo_path: Path) -> Result[None]:
+def _maybe_warn_feature_shadow(feature: str, pack_ids: set[str]) -> Diagnostic | None:
+    if feature in pack_ids:
+        return Diagnostic(
+            code="FEATURE_NAME_SHADOWS_PACK",
+            rule="naming.feature.shadows_pack",
+            severity=Severity.WARN,
+            message=f"Feature name shadows pack id: {feature}",
+            location=ValueLocation("feature", feature),
+            upgradeable=True,
+        )
+    return None
+
+
+def validate_repo(repo_path: Path, strict: bool | None = None) -> Result[None]:
     diagnostics: list[Diagnostic] = []
     lock_result = read_lock(repo_path / ".pantsagon.toml")
     diagnostics.extend(lock_result.diagnostics)
+    strict_enabled = effective_strict(strict, lock_result.value)
     if lock_result.value is None:
-        return Result(diagnostics=diagnostics)
+        return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     lock = lock_result.value
     tool = lock.get("tool")
@@ -42,7 +62,7 @@ def validate_repo(repo_path: Path) -> Result[None]:
         diagnostics.append(
             Diagnostic(
                 code="LOCK_SECTION_MISSING",
-                rule="lock.tool",
+                rule="lock.section",
                 severity=Severity.ERROR,
                 message="Missing [tool] section in .pantsagon.toml",
             )
@@ -52,12 +72,12 @@ def validate_repo(repo_path: Path) -> Result[None]:
         diagnostics.append(
             Diagnostic(
                 code="LOCK_SECTION_MISSING",
-                rule="lock.resolved",
+                rule="lock.section",
                 severity=Severity.ERROR,
                 message="Missing [resolved] section in .pantsagon.toml",
             )
         )
-        return Result(diagnostics=diagnostics)
+        return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     raw_packs = resolved.get("packs")
     packs = _get_list(raw_packs)
@@ -65,12 +85,12 @@ def validate_repo(repo_path: Path) -> Result[None]:
         diagnostics.append(
             Diagnostic(
                 code="LOCK_SECTION_MISSING",
-                rule="lock.resolved.packs",
+                rule="lock.section",
                 severity=Severity.ERROR,
                 message="Missing [resolved.packs] entries in .pantsagon.toml",
             )
         )
-        return Result(diagnostics=diagnostics)
+        return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     pack_ids: list[str] = []
     pack_entries: list[dict[str, Any]] = []
@@ -115,8 +135,9 @@ def validate_repo(repo_path: Path) -> Result[None]:
         pack_entries.append(entry)
 
     if any(d.severity == Severity.ERROR for d in diagnostics):
-        return Result(diagnostics=diagnostics)
+        return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
+    pack_id_set = set(pack_ids)
     policy = PackPolicyEngine()
     for entry in pack_entries:
         pack_id = str(entry.get("id"))
@@ -194,6 +215,15 @@ def validate_repo(repo_path: Path) -> Result[None]:
                     )
                 )
 
+        provides = manifest.get("provides")
+        if isinstance(provides, dict):
+            raw_features = provides.get("features")
+            for feature in _get_list(raw_features):
+                diagnostics.extend(validate_feature_name(str(feature)))
+                shadow = _maybe_warn_feature_shadow(str(feature), pack_id_set)
+                if shadow:
+                    diagnostics.append(shadow)
+
         requires = []
         requires_block = manifest.get("requires")
         if isinstance(requires_block, dict):
@@ -212,8 +242,12 @@ def validate_repo(repo_path: Path) -> Result[None]:
 
     selection = lock.get("selection") if isinstance(lock.get("selection"), dict) else {}
     services = _get_list(selection.get("services")) if isinstance(selection, dict) else []
+    reserved = project_reserved_services(lock)
     for svc in services:
         svc_name = str(svc)
+        diagnostics.extend(
+            validate_service_name(svc_name, BUILTIN_RESERVED_SERVICES, reserved)
+        )
         svc_root = repo_path / "services" / svc_name
         if not svc_root.exists():
             diagnostics.append(
@@ -243,6 +277,11 @@ def validate_repo(repo_path: Path) -> Result[None]:
     if isinstance(selection, dict):
         languages = [str(item) for item in _get_list(selection.get("languages"))]
         features = [str(item) for item in _get_list(selection.get("features"))]
+        for feature in features:
+            diagnostics.extend(validate_feature_name(feature))
+            shadow = _maybe_warn_feature_shadow(feature, pack_id_set)
+            if shadow:
+                diagnostics.append(shadow)
         index_path = _bundled_packs_root() / "_index.json"
         if index_path.exists():
             index = load_pack_index(index_path)
@@ -263,4 +302,4 @@ def validate_repo(repo_path: Path) -> Result[None]:
                         )
                     )
 
-    return Result(diagnostics=diagnostics)
+    return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))

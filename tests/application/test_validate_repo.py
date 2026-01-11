@@ -12,6 +12,12 @@ def test_validate_repo_missing_lock(tmp_path):
     assert any(d.code == "LOCK_MISSING" for d in result.diagnostics)
 
 
+def test_validate_repo_invalid_lock(tmp_path):
+    (tmp_path / ".pantsagon.toml").write_text("not=toml:::")
+    result = validate_repo(repo_path=tmp_path)
+    assert any(d.code == "LOCK_PARSE_FAILED" for d in result.diagnostics)
+
+
 def test_validate_repo_missing_service_dir(tmp_path):
     init_repo(repo_path=tmp_path, languages=["python"], services=["missing"], features=[], renderer="copier")
     svc_dir = tmp_path / "services" / "missing"

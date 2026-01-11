@@ -28,3 +28,10 @@ jobs:
           flags: pants
           name: pants
           fail_ci_if_error: false
+      - name: Install pack validation deps
+        run: |
+          python -m pip install -r 3rdparty/python/requirements.txt
+      - name: Validate bundled packs
+        run: |
+          PYTHONPATH=services/pantsagon/src \
+            python -m pantsagon.tools.validate_packs --bundled --quiet

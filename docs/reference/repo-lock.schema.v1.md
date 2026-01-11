@@ -38,6 +38,10 @@ Single source of truth for a Pantsagon-generated repository.
           "items": {
             "additionalProperties": false,
             "properties": {
+              "digest": {
+                "description": "Content digest for the pack.",
+                "type": "string"
+              },
               "id": {
                 "type": "string"
               },
@@ -80,6 +84,15 @@ Single source of truth for a Pantsagon-generated repository.
     "selection": {
       "additionalProperties": false,
       "properties": {
+        "augmented_coding": {
+          "enum": [
+            "agents",
+            "claude",
+            "gemini",
+            "none"
+          ],
+          "type": "string"
+        },
         "features": {
           "items": {
             "type": "string"

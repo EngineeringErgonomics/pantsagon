@@ -1,13 +1,5 @@
 from typer.testing import CliRunner
 
-import importlib.util
-import pytest
-
-pytestmark = pytest.mark.skipif(
-    importlib.util.find_spec("copier") is None,
-    reason="copier not installed",
-)
-
 from pantsagon.entrypoints.cli import app
 
 

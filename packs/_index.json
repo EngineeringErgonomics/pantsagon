@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "base_packs": ["pantsagon.core"],
+  "languages": {
+    "python": ["pantsagon.python"]
+  },
+  "features": {
+    "openapi": ["pantsagon.openapi"],
+    "docker": ["pantsagon.docker"]
+  }
+}

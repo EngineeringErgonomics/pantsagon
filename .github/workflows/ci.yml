@@ -22,4 +22,4 @@ jobs:
       - name: Pytest
         run: pytest -q
       - name: Pack validation
-        run: python -m pantsagon.tools.validate_packs --bundled
+        run: python -m pantsagon.tools.validate_packs --bundled --quiet

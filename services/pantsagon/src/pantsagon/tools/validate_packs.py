@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
+import os
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -144,6 +146,7 @@ def validate_bundled_packs(
     *,
     render_on_validation_error: bool,
     render_enabled: bool,
+    quiet: bool,
 ) -> Result[dict[str, Any]]:
     root = _repo_root()
     pack_validator.SCHEMA_PATH = pack_validator._schema_path(root)
@@ -206,7 +209,14 @@ def validate_bundled_packs(
                     allow_hooks=False,
                 )
                 try:
-                    renderer.render(request)
+                    if quiet:
+                        with open(os.devnull, "w", encoding="utf-8") as devnull:
+                            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(
+                                devnull
+                            ):
+                                renderer.render(request)
+                    else:
+                        renderer.render(request)
                 except RendererExecutionError as exc:
                     diag = _render_failed_diagnostic(pack_dir, root, pack_id, exc)
                     diagnostics.append(diag)
@@ -231,6 +241,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Validate bundled Pantsagon packs")
     parser.add_argument("--bundled", action="store_true", help="Validate bundled packs")
     parser.add_argument("--json", action="store_true", help="Emit Result JSON")
+    parser.add_argument("--quiet", action="store_true", help="Suppress Copier output")
     render_group = parser.add_mutually_exclusive_group()
     render_group.add_argument(
         "--render-on-validation-error",
@@ -253,6 +264,7 @@ def main(argv: list[str] | None = None) -> int:
         packs_root=_repo_root() / "packs",
         render_on_validation_error=args.render_on_validation_error,
         render_enabled=not args.no_render,
+        quiet=args.quiet or args.json,
     )
 
     if args.json:

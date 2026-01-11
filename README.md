@@ -108,6 +108,43 @@ Pantsagon validates:
 
 Bundled packs live in `packs/`.
 
+## Example generated tree
+
+Example (Python + OpenAPI + Docker):
+
+```
+my-repo/
+  pants.toml
+  .pantsagon.toml
+  .github/workflows/ci.yml
+  services/
+    monitor-cost/
+      BUILD
+      Dockerfile
+      README.md
+      src/monitor_cost/
+        domain/
+        ports/
+        application/
+        adapters/
+        entrypoints/
+  shared/
+    foundation/
+    adapters/
+    contracts/
+      openapi/
+        monitor-cost.yaml
+  docs/
+    README.md
+  tools/
+    forbidden_imports/
+      README.md
+  3rdparty/
+    python/
+      requirements.txt
+      BUILD
+```
+
 ## Augmented coding files
 
 If you pass `--augmented-coding`, Pantsagon creates a repo guidance file:

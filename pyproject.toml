@@ -24,4 +24,4 @@ pantsagon = "pantsagon.entrypoints.cli:app"
 
 [tool.pytest.ini_options]
 addopts = "-q"
-pythonpath = ["."]
+pythonpath = ["services/pantsagon/src", "tools/forbidden_imports/src", "."]

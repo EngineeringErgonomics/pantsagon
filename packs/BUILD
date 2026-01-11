@@ -1,0 +1,4 @@
+resources(
+  name="bundled",
+  sources=["**/*"],
+)

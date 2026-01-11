@@ -11,6 +11,8 @@ class CopierRenderer:
                 str(request.pack_path),
                 str(request.staging_dir),
                 data=request.answers,
+                defaults=True,
+                overwrite=True,
                 unsafe=request.allow_hooks,
                 overwrite=True,
             )

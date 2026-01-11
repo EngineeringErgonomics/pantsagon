@@ -45,6 +45,17 @@
           "type": "boolean",
           "default": false,
           "description": "Whether pack hooks are allowed to execute."
+        },
+        "naming": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "reserved_services": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Project-specific additional reserved service names."
+            }
+          }
         }
       }
     },
@@ -64,8 +75,12 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^[a-z][a-z0-9-]*$"
+            "pattern": "^[a-z](?:[a-z0-9]*(-[a-z0-9]+)*)$"
           }
+        },
+        "augmented_coding": {
+          "type": "string",
+          "enum": ["agents", "claude", "gemini", "none"]
         }
       }
     },
@@ -98,6 +113,10 @@
               "ref": {
                 "type": "string",
                 "description": "Git ref, commit, or registry digest."
+              },
+              "digest": {
+                "type": "string",
+                "description": "Content digest for the pack."
               }
             }
           }

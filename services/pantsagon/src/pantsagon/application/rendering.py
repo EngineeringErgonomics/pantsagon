@@ -10,23 +10,11 @@ from pantsagon.ports.policy_engine import PolicyEnginePort
 from pantsagon.ports.renderer import RenderRequest, RendererPort
 
 
-def resolve_pack_ids(languages: Iterable[str], features: Iterable[str]) -> list[str]:
-    packs = ["pantsagon.core"]
-    if "python" in languages:
-        packs.append("pantsagon.python")
-    if "openapi" in features:
-        packs.append("pantsagon.openapi")
-    if "docker" in features:
-        packs.append("pantsagon.docker")
-    return packs
-
-
 def render_bundled_packs(
     stage_dir: Path,
     repo_path: Path,
-    languages: list[str],
-    services: list[str],
-    features: list[str],
+    pack_ids: Iterable[str],
+    answers: dict[str, str],
     *,
     catalog: PackCatalogPort,
     renderer: RendererPort,
@@ -34,12 +22,6 @@ def render_bundled_packs(
     allow_hooks: bool = False,
 ) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
-    pack_ids = resolve_pack_ids(languages, features)
-    service_name = services[0] if services else "service"
-    answers = {
-        "repo_name": repo_path.name,
-        "service_name": service_name,
-    }
 
     for pack_id in pack_ids:
         ref = PackRef(id=pack_id, version="0.0.0", source="bundled")

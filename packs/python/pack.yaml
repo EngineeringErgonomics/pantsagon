@@ -6,6 +6,11 @@ compatibility:
   pants: ">=2.30.0"
   languages:
     python: ">=3.12,<3.15"
+requires:
+  packs:
+    - pantsagon.core
 variables:
   - name: service_name
+    type: string
+  - name: service_pkg
     type: string

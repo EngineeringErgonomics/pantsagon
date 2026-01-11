@@ -41,6 +41,37 @@ Notes:
 - `init` renders bundled packs into a minimal skeleton and writes `.pantsagon.toml`.
 - Pack content is intentionally small at v0.1 and will expand toward full hexagonal scaffolds.
 
+## Repo lock (.pantsagon.toml)
+
+The repo lock captures tool version, selection, and resolved packs/answers:
+
+```toml
+[tool]
+name = "pantsagon"
+version = "0.1.0"
+
+[settings]
+renderer = "copier"
+strict = false
+strict_manifest = true
+allow_hooks = false
+
+[selection]
+languages = ["python"]
+features = ["openapi", "docker"]
+services = ["monitors", "governance"]
+augmented_coding = "none"
+
+[[resolved.packs]]
+id = "pantsagon.core"
+version = "1.0.0"
+source = "bundled"
+
+[resolved.answers]
+repo_name = "my-repo"
+service_name = "monitors"
+```
+
 ## CLI (v0.1)
 
 ```bash
@@ -60,6 +91,21 @@ Notes:
 - `validate` returns non‑zero when `.pantsagon.toml` is missing.
 - `--json` prints a structured Result payload.
 
+## Validation & strictness
+
+Naming rules are enforced early, before filesystem writes:
+
+- **Service names**: strict kebab-case, no leading/trailing or doubled dashes, and no reserved names.
+- **Pack ids**: lowercase dot-namespaced identifiers (e.g. `pantsagon.core`).
+- **Features**: lowercase kebab-case or snake_case (no dots).
+- **Variables**: valid identifiers matching Copier variables.
+
+Strictness tiers:
+
+- `--strict` upgrades upgradeable warnings to errors.
+- Repo defaults live in `.pantsagon.toml` under `[settings]` (CLI `--strict` overrides repo settings).
+- Project-specific reserved service names can be added under `[settings.naming]` with `reserved_services = [...]`.
+
 ## Packs
 
 A pack is a directory with:
@@ -73,8 +119,46 @@ templates/  # rendered files
 Pantsagon validates:
 - JSON Schema conformance (`shared/contracts/schemas/pack.schema.v1.json`)
 - Manifest ↔ Copier variable alignment
+- Bundled pack smoke-render validation (`python -m pantsagon.tools.validate_packs --bundled`)
 
 Bundled packs live in `packs/`.
+
+## Example generated tree
+
+Example (Python + OpenAPI + Docker):
+
+```
+my-repo/
+  pants.toml
+  .pantsagon.toml
+  .github/workflows/ci.yml
+  services/
+    monitor-cost/
+      BUILD
+      Dockerfile
+      README.md
+      src/monitor_cost/
+        domain/
+        ports/
+        application/
+        adapters/
+        entrypoints/
+  shared/
+    foundation/
+    adapters/
+    contracts/
+      openapi/
+        monitor-cost.yaml
+  docs/
+    README.md
+  tools/
+    forbidden_imports/
+      README.md
+  3rdparty/
+    python/
+      requirements.txt
+      BUILD
+```
 
 ## Augmented coding files
 
@@ -100,6 +184,13 @@ Run tests:
 
 ```bash
 pytest -q
+```
+
+Pack validation:
+
+```bash
+PANTSAGON_DETERMINISTIC=1 PYTHONPATH=services/pantsagon/src \
+  python -m pantsagon.tools.validate_packs --bundled --quiet
 ```
 
 Notes:

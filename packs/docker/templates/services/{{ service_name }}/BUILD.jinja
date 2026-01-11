@@ -1,0 +1,15 @@
+pex_binary(
+  name="app",
+  entry_point="{{ service_pkg }}.entrypoints.main:main",
+  output_path="dist/app.pex",
+  dependencies=[
+    "//services/{{ service_name }}/src/{{ service_pkg }}/entrypoints:entrypoints",
+  ],
+  tags=["entrypoint-consumer", "svc:{{ service_name }}"],
+)
+
+docker_image(
+  name="image",
+  dockerfile="Dockerfile",
+  dependencies=[":app"],
+)

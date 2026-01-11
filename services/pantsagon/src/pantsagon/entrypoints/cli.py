@@ -1,11 +1,15 @@
-import typer
 from pathlib import Path
+
+import typer
 
 from pantsagon.adapters.pack_catalog.bundled import BundledPackCatalog
 from pantsagon.adapters.policy.pack_validator import PackPolicyEngine
 from pantsagon.adapters.renderer.copier_renderer import CopierRenderer
 from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
+from pantsagon.application.add_service import add_service as add_service_use_case
 from pantsagon.application.init_repo import init_repo
+from pantsagon.application.result_serialization import serialize_result
+from pantsagon.application.validate_repo import validate_repo
 
 app = typer.Typer(add_completion=False)
 
@@ -34,6 +38,7 @@ def init(
     services: str = "",
     feature: list[str] = typer.Option(None),
     augmented_coding: str = typer.Option("none", "--augmented-coding"),
+    strict: bool | None = typer.Option(None, "--strict"),
 ):
     features = feature or []
     svc_list = [s for s in services.split(",") if s]
@@ -53,16 +58,15 @@ def init(
         policy_engine=policy_engine,
         workspace=workspace,
         augmented_coding=augmented_coding,
+        strict=strict,
     )
     raise typer.Exit(result.exit_code)
 
 
 @app.command()
-def validate(json: bool = False):
-    from pantsagon.application.validate_repo import validate_repo
-    from pantsagon.application.result_serialization import serialize_result
-
-    result = validate_repo(Path("."))
+def validate(json: bool = False, strict: bool | None = typer.Option(None, "--strict")):
+    policy_engine = PackPolicyEngine()
+    result = validate_repo(Path("."), strict=strict, policy_engine=policy_engine)
     if json:
         data = serialize_result(result, command="validate", args=[])
         import json as _json
@@ -72,8 +76,10 @@ def validate(json: bool = False):
 
 
 @app.command()
-def add_service(name: str, lang: str = typer.Option("python")):
-    from pantsagon.application.add_service import add_service as _add
-
-    result = _add(Path("."), name=name, lang=lang)
+def add_service(
+    name: str,
+    lang: str = typer.Option("python"),
+    strict: bool | None = typer.Option(None, "--strict"),
+):
+    result = add_service_use_case(Path("."), name=name, lang=lang, strict=strict)
     raise typer.Exit(result.exit_code)

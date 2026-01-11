@@ -1,4 +1,5 @@
 from pathlib import Path
+import contextlib
 import os
 
 import typer
@@ -50,6 +51,7 @@ def init(
     feature: list[str] = typer.Option(None),
     augmented_coding: str = typer.Option("none", "--augmented-coding"),
     strict: bool | None = typer.Option(None, "--strict"),
+    json: bool = typer.Option(False, "--json"),
 ):
     features = feature or []
     svc_list = [s for s in services.split(",") if s]
@@ -58,19 +60,40 @@ def init(
     renderer_port = CopierRenderer()
     policy_engine = PackPolicyEngine()
     workspace = FilesystemWorkspace(repo)
-    result = init_repo(
-        repo,
-        [lang],
-        svc_list,
-        features,
-        renderer="copier",
-        renderer_port=renderer_port,
-        pack_catalog=catalog,
-        policy_engine=policy_engine,
-        workspace=workspace,
-        augmented_coding=augmented_coding,
-        strict=strict,
-    )
+    if json:
+        with open(os.devnull, "w", encoding="utf-8") as devnull:
+            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(devnull):
+                result = init_repo(
+                    repo,
+                    [lang],
+                    svc_list,
+                    features,
+                    renderer="copier",
+                    renderer_port=renderer_port,
+                    pack_catalog=catalog,
+                    policy_engine=policy_engine,
+                    workspace=workspace,
+                    augmented_coding=augmented_coding,
+                    strict=strict,
+                )
+        data = serialize_result(result, command="init", args=[str(repo)])
+        import json as _json
+
+        typer.echo(_json.dumps(data))
+    else:
+        result = init_repo(
+            repo,
+            [lang],
+            svc_list,
+            features,
+            renderer="copier",
+            renderer_port=renderer_port,
+            pack_catalog=catalog,
+            policy_engine=policy_engine,
+            workspace=workspace,
+            augmented_coding=augmented_coding,
+            strict=strict,
+        )
     raise typer.Exit(result.exit_code)
 
 
@@ -91,6 +114,16 @@ def add_service(
     name: str,
     lang: str = typer.Option("python"),
     strict: bool | None = typer.Option(None, "--strict"),
+    json: bool = typer.Option(False, "--json"),
 ):
-    result = add_service_use_case(Path("."), name=name, lang=lang, strict=strict)
+    if json:
+        with open(os.devnull, "w", encoding="utf-8") as devnull:
+            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(devnull):
+                result = add_service_use_case(Path("."), name=name, lang=lang, strict=strict)
+        data = serialize_result(result, command="add-service", args=[name])
+        import json as _json
+
+        typer.echo(_json.dumps(data))
+    else:
+        result = add_service_use_case(Path("."), name=name, lang=lang, strict=strict)
     raise typer.Exit(result.exit_code)

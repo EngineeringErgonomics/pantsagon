@@ -105,8 +105,8 @@ pantsagon validate --json --strict
 
 Notes:
 - `validate` returns non‑zero when `.pantsagon.toml` is missing.
-- `--json` prints a structured Result payload.
-- `add-service` currently validates naming/existence only; it does not render packs yet.
+- `--json` prints a structured Result payload for `init`, `add-service`, and `validate`.
+- `add-service` renders only service-scoped artifacts from pinned packs and updates `.pantsagon.toml`.
 
 ## Validation & strictness
 

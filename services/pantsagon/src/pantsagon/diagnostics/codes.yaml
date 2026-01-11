@@ -145,6 +145,12 @@ codes:
     message: Service name is reserved.
     hint: Choose a different name or add project-level reserved names in .pantsagon.toml.
 
+  - code: SERVICE_EXISTS
+    severity: error
+    rule: service.name
+    message: Service already exists.
+    hint: Choose a different service name or remove the existing service.
+
   - code: VARIABLE_NAME_INVALID
     severity: error
     rule: naming.variable.format

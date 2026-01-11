@@ -1,15 +1,14 @@
 from pathlib import Path
-from typing import Any
 
 from pantsagon.domain.result import Result
+from pantsagon.domain.determinism import is_deterministic
+from pantsagon.application.rendering import render_bundled_packs
+from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
 
 
-def _minimal_toml(lock: dict[str, Any]) -> str:
-    tool_raw = lock.get("tool", {})
-    tool: dict[str, Any] = tool_raw if isinstance(tool_raw, dict) else {}
-    name = str(tool.get("name", ""))
-    version = str(tool.get("version", ""))
-    return f"[tool]\nname='{name}'\nversion='{version}'\n"
+def _minimal_toml(lock: dict) -> str:
+    tool = lock.get("tool", {})
+    return f"[tool]\nname='{tool.get('name', '')}'\nversion='{tool.get('version', '')}'\n"
 
 
 def init_repo(
@@ -20,14 +19,9 @@ def init_repo(
     renderer: str,
     augmented_coding: str | None = None,
 ) -> Result[None]:
-    lock: dict[str, Any] = {
+    lock = {
         "tool": {"name": "pantsagon", "version": "0.1.0"},
-        "settings": {
-            "renderer": renderer,
-            "strict": False,
-            "strict_manifest": True,
-            "allow_hooks": False,
-        },
+        "settings": {"renderer": renderer, "strict": False, "strict_manifest": True, "allow_hooks": False},
         "selection": {
             "languages": languages,
             "features": features,
@@ -36,10 +30,16 @@ def init_repo(
         },
         "resolved": {"packs": [], "answers": {}},
     }
-    content = _minimal_toml(lock)
-    (repo_path / ".pantsagon.toml").write_text(content)
-    # Minimal core file for now; later replaced by rendered pack output.
-    (repo_path / "pants.toml").write_text('[GLOBAL]\npants_version = "2.30.0"\n')
+    try:
+        import tomli_w
+        content = tomli_w.dumps(lock)
+    except ModuleNotFoundError:
+        content = _minimal_toml(lock)
+    workspace = FilesystemWorkspace(repo_path)
+    stage = workspace.begin_transaction()
+    render_bundled_packs(stage, repo_path, languages, services, features, allow_hooks=False)
+    (stage / ".pantsagon.toml").write_text(content)
+    workspace.commit(stage)
 
     augmented = augmented_coding or "none"
     if augmented == "agents":

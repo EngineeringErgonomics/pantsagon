@@ -1262,6 +1262,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/release-checklist-v1.0.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release checklist v1.0.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1356,18 +1377,60 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 <td>Rename the feature to avoid confusion with pack identifiers.</td>
 </tr>
 <tr>
-<td><code>LOCK_INVALID</code></td>
-<td><code>error</code></td>
-<td><code>repo.lock.invalid</code></td>
-<td>Repo lock (.pantsagon.toml) is invalid.</td>
-<td>Fix the TOML syntax or regenerate the repo lock with init.</td>
-</tr>
-<tr>
 <td><code>LOCK_MISSING</code></td>
 <td><code>error</code></td>
-<td><code>repo.lock.missing</code></td>
-<td>Repo lock (.pantsagon.toml) is missing.</td>
-<td>Run init to create a new repo lock file.</td>
+<td><code>lock.exists</code></td>
+<td>Repo lock file is missing.</td>
+<td>Run pantsagon init or restore .pantsagon.toml.</td>
+</tr>
+<tr>
+<td><code>LOCK_PACK_DUPLICATE</code></td>
+<td><code>error</code></td>
+<td><code>lock.resolved.packs</code></td>
+<td>Repo lock contains duplicate pack entries.</td>
+<td>Remove duplicate pack ids from resolved.packs.</td>
+</tr>
+<tr>
+<td><code>LOCK_PACK_INVALID</code></td>
+<td><code>error</code></td>
+<td><code>lock.resolved.packs</code></td>
+<td>Repo lock contains an invalid pack entry.</td>
+<td>Ensure each pack has id, version, and source.</td>
+</tr>
+<tr>
+<td><code>LOCK_PARSE_FAILED</code></td>
+<td><code>error</code></td>
+<td><code>lock.parse</code></td>
+<td>Repo lock file could not be parsed.</td>
+<td>Fix invalid TOML in .pantsagon.toml.</td>
+</tr>
+<tr>
+<td><code>LOCK_SECTION_MISSING</code></td>
+<td><code>error</code></td>
+<td><code>lock.section</code></td>
+<td>Repo lock is missing a required section.</td>
+<td>Regenerate the repo lock or repair the missing section.</td>
+</tr>
+<tr>
+<td><code>LOCK_SELECTION_MISMATCH</code></td>
+<td><code>warn</code></td>
+<td><code>lock.selection</code></td>
+<td>Selection does not match resolved pack set.</td>
+<td>Update selection or re-resolve packs to align.</td>
+</tr>
+<tr>
+<td><code>PACK_COMPAT_INVALID</code></td>
+<td><code>error</code></td>
+<td><code>pack.compatibility</code></td>
+<td>Pack compatibility metadata is invalid.</td>
+<td>Ensure compatibility.pants is a string.</td>
+</tr>
+<tr>
+<td><code>PACK_FILE_MISSING</code></td>
+<td><code>error</code></td>
+<td><code>pack.files</code></td>
+<td>Pack is missing a required file.</td>
+<td>Ensure pack.yaml and copier.yml exist in the pack directory.</td>
 </tr>
 <tr>
 <td><code>PACK_ID_INVALID</code></td>
@@ -1375,6 +1438,27 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 <td><code>naming.pack.id</code></td>
 <td>Pack id format is invalid.</td>
 <td>Use lowercase dot-namespaced ids (e.g. pantsagon.core).</td>
+</tr>
+<tr>
+<td><code>PACK_INDEX_UNKNOWN_FEATURE</code></td>
+<td><code>error</code></td>
+<td><code>pack.index.feature</code></td>
+<td>Selection feature is not defined in the pack index.</td>
+<td>Add the feature mapping to packs/_index.json.</td>
+</tr>
+<tr>
+<td><code>PACK_INDEX_UNKNOWN_LANGUAGE</code></td>
+<td><code>error</code></td>
+<td><code>pack.index.language</code></td>
+<td>Selection language is not defined in the pack index.</td>
+<td>Add the language mapping to packs/_index.json.</td>
+</tr>
+<tr>
+<td><code>PACK_LOCATION_MISSING</code></td>
+<td><code>error</code></td>
+<td><code>pack.catalog.fetch</code></td>
+<td>Local pack is missing a location.</td>
+<td>Set location for local pack refs in the lock.</td>
 </tr>
 <tr>
 <td><code>PACK_MISSING_REQUIRED</code></td>
@@ -1389,6 +1473,27 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 <td><code>pack.catalog.fetch</code></td>
 <td>Pack could not be found.</td>
 <td>Check pack id/version and configured pack sources.</td>
+</tr>
+<tr>
+<td><code>PACK_RENDER_FAILED</code></td>
+<td><code>error</code></td>
+<td><code>pack.render</code></td>
+<td>Pack render failed.</td>
+<td>Check Copier templates and inputs.</td>
+</tr>
+<tr>
+<td><code>REPO_LAYER_MISSING</code></td>
+<td><code>error</code></td>
+<td><code>repo.layer.exists</code></td>
+<td>Service layer directory is missing.</td>
+<td>Regenerate the service skeleton or fix the layout.</td>
+</tr>
+<tr>
+<td><code>REPO_SERVICE_MISSING</code></td>
+<td><code>error</code></td>
+<td><code>repo.service.exists</code></td>
+<td>Service directory is missing for a declared service.</td>
+<td>Regenerate the service or remove it from selection.</td>
 </tr>
 <tr>
 <td><code>SERVICE_NAME_INVALID</code></td>

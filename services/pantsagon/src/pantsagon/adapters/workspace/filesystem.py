@@ -34,13 +34,13 @@ class FilesystemWorkspace:
                     self._copy_file(path, dest)
                     created_files.append(dest)
         except Exception as e:
-            for created in created_files:
-                if created.exists():
-                    created.unlink()
-            for created_dir in sorted(created_dirs, reverse=True):
-                if created_dir.exists():
+            for copied in reversed(created_files):
+                if copied.exists():
+                    copied.unlink()
+            for directory in reversed(created_dirs):
+                if directory.exists():
                     try:
-                        created_dir.rmdir()
+                        directory.rmdir()
                     except OSError:
                         pass
             raise WorkspaceCommitError("Workspace commit failed", cause=e)

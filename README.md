@@ -104,6 +104,7 @@ templates/  # rendered files
 Pantsagon validates:
 - JSON Schema conformance (`schemas/pack.schema.v1.json`)
 - Manifest ↔ Copier variable alignment
+- Bundled pack smoke-render validation (`python -m pantsagon.tools.validate_packs --bundled`)
 
 Bundled packs live in `packs/`.
 
@@ -131,6 +132,13 @@ Run tests:
 
 ```bash
 pytest -q
+```
+
+Pack validation:
+
+```bash
+PANTSAGON_DETERMINISTIC=1 PYTHONPATH=services/pantsagon/src \
+  python -m pantsagon.tools.validate_packs --bundled --quiet
 ```
 
 Notes:

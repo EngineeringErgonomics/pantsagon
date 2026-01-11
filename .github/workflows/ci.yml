@@ -19,4 +19,5 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "pantsbuild.pants==2.30.0"
       - name: Pants test
-        run: pants test ::
+        run: |
+          pants test ::

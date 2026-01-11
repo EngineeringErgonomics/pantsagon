@@ -1262,6 +1262,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/release-checklist-v1.0.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release checklist v1.0.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1391,6 +1412,13 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 <td>Ensure compatibility.pants is a string.</td>
 </tr>
 <tr>
+<td><code>PACK_FILE_MISSING</code></td>
+<td><code>error</code></td>
+<td><code>pack.files</code></td>
+<td>Pack is missing a required file.</td>
+<td>Ensure pack.yaml and copier.yml exist in the pack directory.</td>
+</tr>
+<tr>
 <td><code>PACK_INDEX_UNKNOWN_FEATURE</code></td>
 <td><code>error</code></td>
 <td><code>pack.index.feature</code></td>
@@ -1424,6 +1452,13 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 <td><code>pack.catalog.fetch</code></td>
 <td>Pack could not be found.</td>
 <td>Check pack id/version and configured pack sources.</td>
+</tr>
+<tr>
+<td><code>PACK_RENDER_FAILED</code></td>
+<td><code>error</code></td>
+<td><code>pack.render</code></td>
+<td>Pack render failed.</td>
+<td>Check Copier templates and inputs.</td>
 </tr>
 <tr>
 <td><code>REPO_LAYER_MISSING</code></td>

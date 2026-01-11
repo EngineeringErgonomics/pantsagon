@@ -1,6 +1,11 @@
 from pathlib import Path
 from typing import Any
 
+import shutil
+
+from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
+from pantsagon.application.rendering import render_bundled_packs
+from pantsagon.domain.diagnostics import Severity
 from pantsagon.domain.result import Result
 
 
@@ -36,16 +41,30 @@ def init_repo(
         },
         "resolved": {"packs": [], "answers": {}},
     }
+    workspace = FilesystemWorkspace(repo_path)
+    stage = workspace.begin_transaction()
+    diagnostics = render_bundled_packs(
+        stage_dir=stage,
+        repo_path=repo_path,
+        languages=languages,
+        services=services,
+        features=features,
+        allow_hooks=False,
+    )
+    if any(d.severity == Severity.ERROR for d in diagnostics):
+        shutil.rmtree(stage, ignore_errors=True)
+        return Result(diagnostics=diagnostics)
+
     content = _minimal_toml(lock)
-    (repo_path / ".pantsagon.toml").write_text(content)
-    # Minimal core file for now; later replaced by rendered pack output.
-    (repo_path / "pants.toml").write_text('[GLOBAL]\npants_version = "2.30.0"\n')
+    (stage / ".pantsagon.toml").write_text(content)
 
     augmented = augmented_coding or "none"
     if augmented == "agents":
-        (repo_path / "AGENTS.md").write_text("# AGENTS\n")
+        (stage / "AGENTS.md").write_text("# AGENTS\n")
     elif augmented == "claude":
-        (repo_path / "CLAUDE.md").write_text("# CLAUDE\n")
+        (stage / "CLAUDE.md").write_text("# CLAUDE\n")
     elif augmented == "gemini":
-        (repo_path / "GEMINI.md").write_text("# GEMINI\n")
-    return Result()
+        (stage / "GEMINI.md").write_text("# GEMINI\n")
+
+    workspace.commit(stage)
+    return Result(diagnostics=diagnostics)

@@ -20,24 +20,11 @@ def _repo_root() -> Path:
     raise RuntimeError("Could not locate repo root")
 
 
-def resolve_pack_ids(languages: Iterable[str], features: Iterable[str]) -> list[str]:
-    packs: list[str] = []
-    if "python" in languages:
-        packs.append("pantsagon.python")
-    if "openapi" in features:
-        packs.append("pantsagon.openapi")
-    if "docker" in features:
-        packs.append("pantsagon.docker")
-    packs.append("pantsagon.core")
-    return packs
-
-
 def render_bundled_packs(
     stage_dir: Path,
     repo_path: Path,
-    languages: list[str],
-    services: list[str],
-    features: list[str],
+    pack_ids: Iterable[str],
+    answers: dict[str, str],
     allow_hooks: bool = False,
 ) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
@@ -46,13 +33,6 @@ def render_bundled_packs(
     renderer = CopierRenderer()
     pack_validator.SCHEMA_PATH = pack_validator._schema_path(repo_root)
     engine = PackPolicyEngine()
-
-    pack_ids = resolve_pack_ids(languages, features)
-    service_name = services[0] if services else "service"
-    answers = {
-        "repo_name": repo_path.name,
-        "service_name": service_name,
-    }
 
     for pack_id in pack_ids:
         pack_path = catalog.get_pack_path(pack_id)

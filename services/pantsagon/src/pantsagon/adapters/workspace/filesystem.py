@@ -10,6 +10,7 @@ class FilesystemWorkspace:
         self.root = root
 
     def _copy_file(self, src: Path, dest: Path) -> None:
+        dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest)
 
     def begin_transaction(self) -> Path:
@@ -27,7 +28,9 @@ class FilesystemWorkspace:
                         dest.mkdir(parents=True, exist_ok=True)
                         created_dirs.append(dest)
                 else:
-                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    if not dest.parent.exists():
+                        dest.parent.mkdir(parents=True, exist_ok=True)
+                        created_dirs.append(dest.parent)
                     self._copy_file(path, dest)
                     created_files.append(dest)
         except Exception as e:

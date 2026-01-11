@@ -3,7 +3,7 @@ id: pantsagon.python
 version: 1.0.0
 description: Python service skeleton
 compatibility:
-  pants: ">=2.30.0,<2.31"
+  pants: ">=2.30.0"
 requires:
   packs:
     - pantsagon.core

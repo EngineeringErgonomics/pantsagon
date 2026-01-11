@@ -3,7 +3,7 @@ id: pantsagon.core
 version: 1.0.0
 description: Core monorepo skeleton
 compatibility:
-  pants: ">=2.30.0,<2.31"
+  pants: ">=2.30.0"
 variables:
   - name: repo_name
     type: string

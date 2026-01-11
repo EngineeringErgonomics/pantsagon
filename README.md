@@ -41,6 +41,37 @@ Notes:
 - `init` renders bundled packs into a minimal skeleton and writes `.pantsagon.toml`.
 - Pack content is intentionally small at v0.1 and will expand toward full hexagonal scaffolds.
 
+## Repo lock (.pantsagon.toml)
+
+The repo lock captures tool version, selection, and resolved packs/answers:
+
+```toml
+[tool]
+name = "pantsagon"
+version = "0.1.0"
+
+[settings]
+renderer = "copier"
+strict = false
+strict_manifest = true
+allow_hooks = false
+
+[selection]
+languages = ["python"]
+features = ["openapi", "docker"]
+services = ["monitors", "governance"]
+augmented_coding = "none"
+
+[[resolved.packs]]
+id = "pantsagon.core"
+version = "1.0.0"
+source = "bundled"
+
+[resolved.answers]
+repo_name = "my-repo"
+service_name = "monitors"
+```
+
 ## CLI (v0.1)
 
 ```bash

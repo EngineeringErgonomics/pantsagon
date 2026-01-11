@@ -41,6 +41,7 @@ def render_bundled_packs(
     services: list[str],
     features: list[str],
     service_packages: dict[str, str] | None = None,
+    pack_ids: list[str] | None = None,
     allow_hooks: bool = False,
 ) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
@@ -48,7 +49,8 @@ def render_bundled_packs(
     renderer = CopierRenderer()
     engine = PackPolicyEngine()
 
-    pack_ids = resolve_pack_ids(languages, features)
+    if pack_ids is None:
+        pack_ids = resolve_pack_ids(languages, features)
     service_name = services[0] if services else "service"
     service_pkg = (service_packages or {}).get(service_name, service_name.replace("-", "_"))
     answers = {
@@ -56,6 +58,8 @@ def render_bundled_packs(
         "service_name": service_name,
         "service_pkg": service_pkg,
     }
+    if service_packages is not None:
+        answers["service_packages"] = service_packages
 
     for pack_id in pack_ids:
         pack_path = catalog.get_pack_path(pack_id)

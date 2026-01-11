@@ -1,0 +1,46 @@
+[GLOBAL]
+pants_version = "2.30.0"
+backend_packages = [
+  "pants.backend.python",
+  "pants.backend.shell",
+  "pants.backend.docker",
+
+  "pants.backend.experimental.python.lint.ruff.check",
+  "pants.backend.experimental.python.lint.ruff.format",
+  "pants.backend.experimental.python.typecheck.pyright",
+
+  "pants.backend.experimental.openapi",
+  "pants.backend.experimental.openapi.codegen.python",
+  "pants.backend.experimental.openapi.lint.spectral",
+  "pants.backend.experimental.openapi.lint.openapi_format",
+
+  "pants.backend.experimental.terraform",
+  "pants.backend.experimental.visibility",
+  "pants.backend.experimental.adhoc",
+  "pants.backend.build_files.fmt.ruff",
+]
+
+[source]
+root_patterns = [
+  "shared/**/src",
+  "services/**/src",
+  "tools/**/src",
+  "shared/**/tests",
+  "services/**/tests",
+  "tools/**/tests",
+  "shared/**/contracts",
+  "packs",
+  "shared/contracts",
+]
+
+[python]
+interpreter_constraints = ["CPython>=3.12,<3.15"]
+enable_resolves = true
+default_resolve = "python-default"
+resolves = { python-default = "3rdparty/python/python-default.lock" }
+
+[python-infer]
+unowned_dependency_behavior = "error"
+
+[visibility]
+enforce = true

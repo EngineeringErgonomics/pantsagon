@@ -6,10 +6,6 @@ import shutil
 import tempfile
 from typing import Any
 
-from pantsagon.adapters.errors import RendererExecutionError
-from pantsagon.adapters.policy.pack_validator import PackPolicyEngine
-from pantsagon.adapters.renderer.copier_renderer import CopierRenderer
-from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
 from pantsagon.application.repo_lock import effective_strict, project_reserved_services, read_lock, write_lock
 from pantsagon.domain.diagnostics import Diagnostic, Severity
 from pantsagon.domain.naming import BUILTIN_RESERVED_SERVICES, validate_service_name
@@ -272,9 +268,20 @@ def add_service(
     if any(d.severity == Severity.ERROR for d in diagnostics):
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
-    renderer = renderer_port or CopierRenderer()
-    engine = policy_engine or PackPolicyEngine()
-    workspace_impl = workspace or FilesystemWorkspace(repo_path)
+    if renderer_port is None or policy_engine is None or workspace is None:
+        diagnostics.append(
+            Diagnostic(
+                code="ADD_SERVICE_PORTS_MISSING",
+                rule="add_service.ports",
+                severity=Severity.ERROR,
+                message="Add service requires renderer, policy engine, and workspace ports.",
+            )
+        )
+        return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
+
+    renderer = renderer_port
+    engine = policy_engine
+    workspace_impl = workspace
     allow_hooks = bool(lock.get("settings", {}).get("allow_hooks", False))
 
     answers = _build_answers(lock, repo_path, name)
@@ -305,7 +312,7 @@ def add_service(
                 )
                 try:
                     renderer.render(request)
-                except RendererExecutionError as exc:
+                except Exception as exc:
                     diagnostics.append(
                         Diagnostic(
                             code="PACK_RENDER_FAILED",

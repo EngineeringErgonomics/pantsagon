@@ -7,6 +7,7 @@ This page is generated from `services/pantsagon/src/pantsagon/diagnostics/codes.
 
 | Code | Severity | Rule | Message | Hint |
 |---|---|---|---|---|
+| `ADD_SERVICE_PORTS_MISSING` | `error` | `add_service.ports` | Add service requires renderer, policy engine, and workspace ports. | Ensure the entrypoint wires required adapters for add-service. |
 | `COPIER_DEFAULT_MISMATCH` | `warn` | `pack.variables.default_mismatch` | Copier default does not match pack.yaml default. | Align defaults, or run in strict mode to fail builds. |
 | `COPIER_UNDECLARED_VARIABLE` | `error` | `pack.variables.copier_undeclared` | Copier defines a variable that is not declared in pack.yaml. | Declare it in pack.yaml.variables or remove it from copier.yml. |
 | `FEATURE_NAME_INVALID` | `error` | `naming.feature.format` | Feature name format is invalid. | Use lowercase kebab-case or snake_case with no dots. |
@@ -29,6 +30,7 @@ This page is generated from `services/pantsagon/src/pantsagon/diagnostics/codes.
 | `PACK_RENDER_FAILED` | `error` | `pack.render` | Pack render failed. | Check Copier templates and inputs. |
 | `REPO_LAYER_MISSING` | `error` | `repo.layer.exists` | Service layer directory is missing. | Regenerate the service skeleton or fix the layout. |
 | `REPO_SERVICE_MISSING` | `error` | `repo.service.exists` | Service directory is missing for a declared service. | Regenerate the service or remove it from selection. |
+| `SERVICE_EXISTS` | `error` | `service.name` | Service already exists. | Choose a different service name or remove the existing service. |
 | `SERVICE_NAME_INVALID` | `error` | `naming.service.format` | Service name format is invalid. | Use lowercase kebab-case without leading, trailing, or doubled dashes. |
 | `SERVICE_NAME_RESERVED` | `error` | `naming.service.reserved` | Service name is reserved. | Choose a different name or add project-level reserved names in .pantsagon.toml. |
 | `VARIABLE_NAME_INVALID` | `error` | `naming.variable.format` | Variable name format is invalid. | Use a valid identifier (letters, numbers, underscore) starting with a letter or underscore. |

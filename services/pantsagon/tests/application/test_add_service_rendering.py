@@ -4,6 +4,10 @@ import os
 
 import pytest
 
+from pantsagon.adapters.policy import pack_validator
+from pantsagon.adapters.policy.pack_validator import PackPolicyEngine
+from pantsagon.adapters.renderer.copier_renderer import CopierRenderer
+from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
 from pantsagon.application.add_service import add_service
 from pantsagon.application.repo_lock import read_lock, write_lock
 
@@ -51,9 +55,17 @@ def _base_lock(repo_path: Path) -> dict:
 def test_add_service_renders_scoped_files(tmp_path, monkeypatch):
     repo_root = _repo_root()
     monkeypatch.setenv("PANTS_BUILDROOT", str(repo_root))
+    pack_validator.SCHEMA_PATH = pack_validator._schema_path(repo_root)
     write_lock(tmp_path / ".pantsagon.toml", _base_lock(tmp_path))
 
-    result = add_service(repo_path=tmp_path, name="monitor-cost", lang="python")
+    result = add_service(
+        repo_path=tmp_path,
+        name="monitor-cost",
+        lang="python",
+        renderer_port=CopierRenderer(),
+        policy_engine=PackPolicyEngine(),
+        workspace=FilesystemWorkspace(tmp_path),
+    )
     assert not [d for d in result.diagnostics if d.severity.value == "error"]
 
     service_root = tmp_path / "services" / "monitor-cost"
@@ -83,11 +95,19 @@ def test_add_service_renders_scoped_files(tmp_path, monkeypatch):
 def test_add_service_skips_openapi_readme_if_present(tmp_path, monkeypatch):
     repo_root = _repo_root()
     monkeypatch.setenv("PANTS_BUILDROOT", str(repo_root))
+    pack_validator.SCHEMA_PATH = pack_validator._schema_path(repo_root)
     write_lock(tmp_path / ".pantsagon.toml", _base_lock(tmp_path))
     readme_path = tmp_path / "shared" / "contracts" / "openapi" / "README.md"
     readme_path.parent.mkdir(parents=True, exist_ok=True)
     readme_path.write_text("keep")
 
-    result = add_service(repo_path=tmp_path, name="monitor-cost", lang="python")
+    result = add_service(
+        repo_path=tmp_path,
+        name="monitor-cost",
+        lang="python",
+        renderer_port=CopierRenderer(),
+        policy_engine=PackPolicyEngine(),
+        workspace=FilesystemWorkspace(tmp_path),
+    )
     assert not [d for d in result.diagnostics if d.severity.value == "error"]
     assert readme_path.read_text() == "keep"

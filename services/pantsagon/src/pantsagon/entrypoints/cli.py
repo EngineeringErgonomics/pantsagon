@@ -116,14 +116,33 @@ def add_service(
     strict: bool | None = typer.Option(None, "--strict"),
     json: bool = typer.Option(False, "--json"),
 ):
+    renderer_port = CopierRenderer()
+    policy_engine = PackPolicyEngine()
+    workspace = FilesystemWorkspace(Path("."))
     if json:
         with open(os.devnull, "w", encoding="utf-8") as devnull:
             with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(devnull):
-                result = add_service_use_case(Path("."), name=name, lang=lang, strict=strict)
+                result = add_service_use_case(
+                    Path("."),
+                    name=name,
+                    lang=lang,
+                    strict=strict,
+                    renderer_port=renderer_port,
+                    policy_engine=policy_engine,
+                    workspace=workspace,
+                )
         data = serialize_result(result, command="add-service", args=[name])
         import json as _json
 
         typer.echo(_json.dumps(data))
     else:
-        result = add_service_use_case(Path("."), name=name, lang=lang, strict=strict)
+        result = add_service_use_case(
+            Path("."),
+            name=name,
+            lang=lang,
+            strict=strict,
+            renderer_port=renderer_port,
+            policy_engine=policy_engine,
+            workspace=workspace,
+        )
     raise typer.Exit(result.exit_code)

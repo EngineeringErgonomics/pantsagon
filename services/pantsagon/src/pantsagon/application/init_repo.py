@@ -19,6 +19,15 @@ def _minimal_toml(lock: dict[str, Any]) -> str:
     return f"[tool]\nname='{name}'\nversion='{version}'\n"
 
 
+def _toml_content(lock: dict[str, Any]) -> str:
+    try:
+        import tomli_w
+
+        return tomli_w.dumps(lock)
+    except ModuleNotFoundError:
+        return _minimal_toml(lock)
+
+
 def init_repo(
     repo_path: Path,
     languages: list[str],
@@ -49,7 +58,7 @@ def init_repo(
         },
         "resolved": {"packs": [], "answers": {}},
     }
-    content = _minimal_toml(lock)
+    content = _toml_content(lock)
     augmented = augmented_coding or "none"
 
     diagnostics: list[Diagnostic] = []

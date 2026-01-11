@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 from pantsagon.domain.diagnostics import Diagnostic, Location
@@ -31,11 +32,12 @@ def serialize_diagnostic(diag: Diagnostic) -> dict[str, Any]:
 
 def serialize_result(
     result: Result[Any],
-    *,
     command: str,
     args: list[str],
 ) -> dict[str, Any]:
     return {
+        "result_schema_version": 1,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "command": command,
         "args": args,
         "exit_code": result.exit_code,

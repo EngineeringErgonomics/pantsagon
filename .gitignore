@@ -1,7 +1,7 @@
 .worktrees/
-.idea/
 __pycache__/
 *.pyc
 .pytest_cache/
 site/
 .pants.d/
+.idea/

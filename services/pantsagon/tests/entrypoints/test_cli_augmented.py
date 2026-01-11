@@ -1,6 +1,14 @@
+import importlib.util
+
+import pytest
 from typer.testing import CliRunner
 
 from pantsagon.entrypoints.cli import app
+
+pytestmark = pytest.mark.skipif(
+    importlib.util.find_spec("copier") is None,
+    reason="copier not installed",
+)
 
 
 def test_augmented_coding_creates_agents_file(tmp_path):

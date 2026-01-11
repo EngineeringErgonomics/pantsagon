@@ -9,9 +9,9 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 SCHEMA_MAP = {
-    "pack.schema.v1.json": "pack.schema.v1.md",
-    "repo-lock.schema.v1.json": "repo-lock.schema.v1.md",
-    "result.schema.v1.json": "result.schema.v1.md",
+    "shared/contracts/schemas/pack.schema.v1.json": "pack.schema.v1.md",
+    "schemas/repo-lock.schema.v1.json": "repo-lock.schema.v1.md",
+    "schemas/result.schema.v1.json": "result.schema.v1.md",
 }
 
 
@@ -86,12 +86,11 @@ def _render_raw(schema: dict[str, Any]) -> str:
 
 
 def generate(repo_root: Path = REPO_ROOT) -> None:
-    schemas_dir = repo_root / "schemas"
     out_dir = repo_root / "docs" / "reference"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     for in_name, out_name in SCHEMA_MAP.items():
-        in_path = schemas_dir / in_name
+        in_path = repo_root / in_name
         if not in_path.exists():
             raise SystemExit(f"Schema file not found: {in_path}")
 

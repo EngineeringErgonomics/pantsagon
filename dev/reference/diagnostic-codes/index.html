@@ -1725,6 +1725,13 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 </thead>
 <tbody>
 <tr>
+<td><code>ADD_SERVICE_PORTS_MISSING</code></td>
+<td><code>error</code></td>
+<td><code>add_service.ports</code></td>
+<td>Add service requires renderer, policy engine, and workspace ports.</td>
+<td>Ensure the entrypoint wires required adapters for add-service.</td>
+</tr>
+<tr>
 <td><code>COPIER_DEFAULT_MISMATCH</code></td>
 <td><code>warn</code></td>
 <td><code>pack.variables.default_mismatch</code></td>
@@ -1877,6 +1884,13 @@ Run: <code>python scripts/generate_diagnostic_codes.py</code></p>
 <td><code>repo.service.exists</code></td>
 <td>Service directory is missing for a declared service.</td>
 <td>Regenerate the service or remove it from selection.</td>
+</tr>
+<tr>
+<td><code>SERVICE_EXISTS</code></td>
+<td><code>error</code></td>
+<td><code>service.name</code></td>
+<td>Service already exists.</td>
+<td>Choose a different service name or remove the existing service.</td>
 </tr>
 <tr>
 <td><code>SERVICE_NAME_INVALID</code></td>

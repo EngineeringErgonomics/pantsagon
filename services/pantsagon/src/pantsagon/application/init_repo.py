@@ -196,7 +196,7 @@ def init_repo(
     ordered_packs = _render_order(resolved_packs)
     ordered_ids = [pack["id"] for pack in ordered_packs]
     lock: dict[str, Any] = {
-        "tool": {"name": "pantsagon", "version": "0.1.0"},
+        "tool": {"name": "pantsagon", "version": "1.0.0"},
         "settings": {
             "renderer": renderer,
             "strict": strict_enabled,

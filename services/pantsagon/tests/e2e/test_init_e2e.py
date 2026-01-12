@@ -24,3 +24,13 @@ def test_init_generates_core_files(tmp_path, monkeypatch):
     assert result.exit_code == 0
     assert (tmp_path / "pants.toml").exists()
     assert (tmp_path / ".pantsagon.toml").exists()
+    service_root = tmp_path / "services" / "monitors"
+    assert (service_root / "src" / "monitors" / "domain" / "__init__.py").exists()
+    assert (service_root / "Dockerfile").exists()
+    assert (
+        tmp_path
+        / "shared"
+        / "contracts"
+        / "openapi"
+        / "monitors.yaml"
+    ).exists()

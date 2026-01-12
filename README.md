@@ -6,7 +6,7 @@ Hexagonal monorepos, generated with enforcement.
 
 Pantsagon is a pack‑based scaffolding CLI for creating Pants‑managed monorepos that enforce hexagonal architecture (domain / application / adapters / entrypoints) from day one. It is designed for strict dependency boundaries, contract‑first APIs, and reproducible upgrades via versioned template packs.
 
-Status: v1 baseline — `init` renders bundled packs into a minimal repo skeleton; `validate` checks repo locks + pack manifests; `add-service` currently validates naming/existence (scaffolding planned).
+Status: v1.0.0 — `init` renders bundled packs into a minimal repo skeleton; `validate` checks repo locks + pack manifests; `add-service` renders service-scoped pack outputs and updates `.pantsagon.toml`.
 
 ## Why Pantsagon
 
@@ -22,7 +22,7 @@ Pantsagon bakes hard boundaries into the bootstrap so services stay clean as the
 - Pack‑based scaffolding with an explicit `pack.yaml` manifest + Copier templates
 - Pack index resolution via `packs/_index.json` (languages/features → pack ids)
 - Schema validation and manifest ↔ Copier cross‑checks
-- Structured diagnostics + stable exit codes (`pantsagon validate --json`)
+- Structured diagnostics + stable exit codes (`--json` on `init`, `add-service`, `validate`)
 - Bundled packs: `core`, `python`, `openapi`, `docker` (minimal scaffolds)
 - Pack validation tool: `python -m pantsagon.tools.validate_packs --bundled`
 - Deterministic mode for tests (`PANTSAGON_DETERMINISTIC=1`)
@@ -63,7 +63,7 @@ The repo lock captures tool version, selection, and resolved packs/answers:
 ```toml
 [tool]
 name = "pantsagon"
-version = "0.1.0"
+version = "1.0.0"
 
 [settings]
 renderer = "copier"
@@ -105,8 +105,8 @@ pantsagon validate --json --strict
 
 Notes:
 - `validate` returns non‑zero when `.pantsagon.toml` is missing.
-- `--json` prints a structured Result payload.
-- `add-service` currently validates naming/existence only; it does not render packs yet.
+- `--json` prints a structured Result payload for `init`, `add-service`, and `validate`.
+- `add-service` renders only service-scoped artifacts from pinned packs and updates `.pantsagon.toml`.
 
 ## Validation & strictness
 
@@ -216,7 +216,6 @@ Notes:
 
 ## Roadmap (near‑term)
 
-- Render pack templates for `add-service` (and update `.pantsagon.toml`)
 - Git/registry pack sources + trust controls
 - Expand bundled pack content toward full hexagonal scaffolds
 

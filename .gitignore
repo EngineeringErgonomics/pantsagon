@@ -4,4 +4,8 @@ __pycache__/
 .pytest_cache/
 site/
 .pants.d/
+.mypy_cache/
+.ruff_cache/
+dist/
+.env
 .idea/

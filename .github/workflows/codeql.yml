@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Map Linguist to CodeQL languages
         id: detect
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const supported = new Set([

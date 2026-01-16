@@ -23,17 +23,17 @@ backend_packages = [
 
 [source]
 root_patterns = [
-  "shared/**/src",
-  "services/**/src",
-  "tools/**/src",
-  "shared/**/tests",
-  "services/**/tests",
-  "tools/**/tests",
-  "tools/forbidden_imports",
-  "shared/**/contracts",
-  "packs",
-  "scripts",
-  "shared/contracts",
+  "/shared/**/src",
+  "/services/**/src",
+  "/tools/**/src",
+  "/shared/**/tests",
+  "/services/**/tests",
+  "/tools/**/tests",
+  "/tools/forbidden_imports",
+  "/shared/**/contracts",
+  "/packs",
+  "/scripts",
+  "/shared/contracts",
 ]
 
 [python]

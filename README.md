@@ -31,11 +31,8 @@ Pantsagon bakes hard boundaries into the bootstrap so services stay clean as the
 ## Quick start (from source)
 
 ```bash
-# inside this repo
-python -m pip install -e .
-
-# initialize a repo
-pantsagon init /path/to/my-repo \
+# inside this repo (requires `pants` on PATH; see pants.toml for version)
+pants run services/pantsagon:cli -- init /path/to/my-repo \
   --lang python \
   --services monitors,governance \
   --feature openapi \
@@ -90,17 +87,17 @@ service_name = "monitors"
 ## CLI (v1)
 
 ```bash
-pantsagon init <repo> \
+pants run services/pantsagon:cli -- init <repo> \
   --lang python \
   --services a,b \
   --feature openapi --feature docker \
   --augmented-coding {agents|claude|gemini|none}
 
-pantsagon add-service <name> \
+pants run services/pantsagon:cli -- add-service <name> \
   --lang python \
   --strict
 
-pantsagon validate --json --strict
+pants run services/pantsagon:cli -- validate --json --strict
 ```
 
 Notes:
@@ -200,7 +197,7 @@ The core is split into:
 Run tests:
 
 ```bash
-pytest -q
+pants test ::
 ```
 
 Pack validation:

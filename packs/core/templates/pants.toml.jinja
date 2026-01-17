@@ -1,39 +1,38 @@
-{% set langs = languages | default([]) %}
-{% set feats = features | default([]) %}
-[GLOBAL]
-pants_version = "2.30.0"
-
-backend_packages = [
+{%- set langs = languages | default([]) -%}
+{%- set feats = features | default([]) -%}
+{%- set backend_packages = [
   "pants.backend.shell",
   "pants.backend.experimental.visibility",
-{% if "python" in langs %}
   "pants.backend.python",
   "pants.backend.python.lint.ruff",
   "pants.backend.python.typecheck.pyright",
-{% endif %}
-{% if "typescript" in langs %}
+] -%}
+{%- if "typescript" in langs -%}
+{%- set backend_packages = backend_packages + [
   "pants.backend.experimental.javascript",
   "pants.backend.experimental.typescript",
-{% endif %}
-{% if "rust" in langs %}
-  "pants.backend.experimental.rust",
-{% endif %}
-{% if "go" in langs %}
-  "pants.backend.experimental.go",
-{% endif %}
-{% if "docker" in feats %}
-  "pants.backend.docker",
-{% endif %}
-]
-
-[source]
-root_patterns = [
+] -%}
+{%- endif -%}
+{%- if "rust" in langs -%}
+{%- set backend_packages = backend_packages + ["pants.backend.experimental.rust"] -%}
+{%- endif -%}
+{%- if "go" in langs -%}
+{%- set backend_packages = backend_packages + ["pants.backend.experimental.go"] -%}
+{%- endif -%}
+{%- if "docker" in feats -%}
+{%- set backend_packages = backend_packages + ["pants.backend.docker"] -%}
+{%- endif -%}
+{%- set root_patterns = [
   "/services/**/src",
   "/services/**/tests",
-{% if "go" in langs %}
+] -%}
+{%- if "go" in langs -%}
+{%- set root_patterns = root_patterns + [
   "/services/**/cmd",
   "/services/**/internal",
-{% endif %}
+] -%}
+{%- endif -%}
+{%- set root_patterns = root_patterns + [
   "/shared/**/src",
   "/shared/**/tests",
   "/shared/**/contracts",
@@ -42,12 +41,31 @@ root_patterns = [
   "/tools/forbidden_imports",
   "/scripts",
   "/docs",
+] -%}
+[GLOBAL]
+pants_version = "2.30.0"
+
+backend_packages = [
+{%- for backend in backend_packages %}
+  "{{ backend }}",
+{%- endfor %}
 ]
 
-{% if "python" in langs %}
+[source]
+root_patterns = [
+{%- for root in root_patterns %}
+  "{{ root }}",
+{%- endfor %}
+]
+
 [python]
 interpreter_constraints = ["CPython>=3.12,<3.15"]
 
 [python-infer]
 unowned_dependency_behavior = "error"
-{% endif %}
+
+[ruff]
+config = ".ruff.toml"
+
+[pyright]
+config = "pyrightconfig.json"

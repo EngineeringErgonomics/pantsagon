@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import shutil
+import tempfile
+import subprocess
+import stat
 from pathlib import Path
 import os
 from typing import Any
@@ -8,7 +11,12 @@ from typing import Any
 import yaml
 
 from pantsagon.application.pack_index import load_pack_index, resolve_pack_ids
-from pantsagon.application.rendering import render_bundled_packs
+from pantsagon.application.rendering import (
+    OPENAPI_PACK_ID,
+    copy_service_scoped,
+    is_service_pack,
+    render_bundled_packs,
+)
 from pantsagon.application.repo_lock import write_lock
 from pantsagon.domain.diagnostics import Diagnostic, Severity
 from pantsagon.domain.naming import BUILTIN_RESERVED_SERVICES, validate_service_name
@@ -17,7 +25,7 @@ from pantsagon.domain.result import Result
 from pantsagon.domain.strictness import apply_strictness
 from pantsagon.ports.pack_catalog import PackCatalogPort
 from pantsagon.ports.policy_engine import PolicyEnginePort
-from pantsagon.ports.renderer import RendererPort
+from pantsagon.ports.renderer import RenderRequest, RendererPort
 from pantsagon.ports.workspace import WorkspacePort
 
 
@@ -96,9 +104,76 @@ def _render_order(packs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return rest + core if core else ordered
 
 
-def _write_augmented(path: Path, augmented: str) -> None:
+def _agents_content(languages: list[str]) -> str:
+    langs = {lang.lower() for lang in languages}
+    lines = [
+        "# AGENTS.md",
+        "",
+        "## Purpose",
+        "This repo is built around strict hexagonal boundaries. Keep layers isolated and code easy to reason about.",
+        "",
+        "## Hexagonal Architecture Rules",
+        "- Domain depends on nothing.",
+        "- Ports depend only on domain.",
+        "- Application depends on domain + ports.",
+        "- Adapters depend on application + ports.",
+        "- Entrypoints depend on adapters/application/ports.",
+        "- Shared contracts live under shared/contracts and are the only cross-service dependency.",
+        "",
+        "## Service Layout (per language)",
+        "- Python: services/<svc>/src/<pkg>/...",
+        "- TypeScript: services/<svc>/src/...",
+        "- Rust: services/<svc>/src/...",
+        "- Go: services/<svc>/internal/... and cmd/<svc>/main.go",
+        "",
+        "## Guardrails",
+        "- Hooks are installed via tools/guards/install-git-hooks.sh",
+        "- Guards live under tools/guards/",
+        "- Forbidden imports: pants run tools/forbidden_imports:check",
+        "",
+        "## Language Notes",
+    ]
+    if "python" in langs:
+        lines.extend(
+            [
+                "### Python",
+                "- Lint/format with ruff: pants lint :: / pants fmt ::",
+                "- Typecheck with pyright: pants check ::",
+                "- Tests: pants test ::",
+                "",
+            ]
+        )
+    if "typescript" in langs:
+        lines.extend(
+            [
+                "### TypeScript",
+                "- Keep sources under services/<svc>/src/",
+                "- Use pants lint/check when configured for TS targets.",
+                "",
+            ]
+        )
+    if "rust" in langs:
+        lines.extend(
+            [
+                "### Rust",
+                "- Use cargo build/test locally (or Pants when configured).",
+                "",
+            ]
+        )
+    if "go" in langs:
+        lines.extend(
+            [
+                "### Go",
+                "- Use go test ./... locally (or Pants when configured).",
+                "",
+            ]
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _write_augmented(path: Path, augmented: str, languages: list[str]) -> None:
     if augmented == "agents":
-        (path / "AGENTS.md").write_text("# AGENTS\n")
+        (path / "AGENTS.md").write_text(_agents_content(languages))
     elif augmented == "claude":
         (path / "CLAUDE.md").write_text("# CLAUDE\n")
     elif augmented == "gemini":
@@ -108,6 +183,74 @@ def _write_augmented(path: Path, augmented: str) -> None:
 def _ensure_minimal_pants_toml(path: Path) -> None:
     if not path.exists():
         path.write_text('[GLOBAL]\npants_version = "2.30.0"\n')
+
+
+def _make_executable_tree(path: Path) -> None:
+    if not path.exists():
+        return
+    if path.is_file():
+        mode = path.stat().st_mode
+        path.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        return
+    for file in path.rglob("*"):
+        if not file.is_file():
+            continue
+        mode = file.stat().st_mode
+        file.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+
+def _post_init_setup(repo_path: Path, diagnostics: list[Diagnostic]) -> None:
+    _make_executable_tree(repo_path / "tools" / "guards")
+    _make_executable_tree(repo_path / ".githooks")
+
+    git = shutil.which("git")
+    if git is None:
+        diagnostics.append(
+            Diagnostic(
+                code="INIT_HOOKS_SETUP_FAILED",
+                rule="init.hooks",
+                severity=Severity.WARN,
+                message="git not found; skipping git init and hook installation.",
+            )
+        )
+        return
+
+    try:
+        subprocess.run([git, "init"], cwd=repo_path, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as exc:
+        diagnostics.append(
+            Diagnostic(
+                code="INIT_HOOKS_SETUP_FAILED",
+                rule="init.hooks",
+                severity=Severity.WARN,
+                message=f"git init failed: {exc}",
+            )
+        )
+        return
+
+    hook_script = repo_path / "tools" / "guards" / "install-git-hooks.sh"
+    if not hook_script.exists():
+        diagnostics.append(
+            Diagnostic(
+                code="INIT_HOOKS_SETUP_FAILED",
+                rule="init.hooks",
+                severity=Severity.WARN,
+                message="install-git-hooks.sh missing; git hooks not installed.",
+            )
+        )
+        return
+
+    try:
+        subprocess.run([str(hook_script)], cwd=repo_path, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as exc:
+        diagnostics.append(
+            Diagnostic(
+                code="INIT_HOOKS_SETUP_FAILED",
+                rule="init.hooks",
+                severity=Severity.WARN,
+                message=f"hook installation failed: {exc}",
+            )
+        )
 
 
 def init_repo(
@@ -177,6 +320,7 @@ def init_repo(
                 "version": str(manifest.get("version", "0.0.0")),
                 "source": "bundled",
                 "requires": _extract_requires(manifest),
+                "service_scoped": is_service_pack(manifest),
             }
         )
 
@@ -186,17 +330,23 @@ def init_repo(
     service_packages = {name: name.replace("-", "_") for name in services}
     service_name = services[0] if services else "service"
     service_pkg = service_packages.get(service_name, service_name.replace("-", "_"))
-    answers = {
+    answers_base = {
         "repo_name": repo_path.name,
+        "service_packages": service_packages,
+        "languages": languages,
+        "features": features,
+    }
+    answers = {
+        **answers_base,
         "service_name": service_name,
         "service_pkg": service_pkg,
-        "service_packages": service_packages,
     }
 
     ordered_packs = _render_order(resolved_packs)
     ordered_ids = [pack["id"] for pack in ordered_packs]
+    service_packs = [pack for pack in ordered_packs if pack.get("service_scoped")]
+    global_packs = [pack for pack in ordered_packs if not pack.get("service_scoped")]
     lock: dict[str, Any] = {
-        "tool": {"name": "pantsagon", "version": "1.0.0"},
         "settings": {
             "renderer": renderer,
             "strict": strict_enabled,
@@ -235,23 +385,59 @@ def init_repo(
         stage = workspace.begin_transaction()
         try:
             write_lock(stage / ".pantsagon.toml", lock)
-            render_diags = render_bundled_packs(
-                stage_dir=stage,
-                repo_path=repo_path,
-                pack_ids=ordered_ids,
-                answers=answers,
-                catalog=pack_catalog,
-                renderer=renderer_port,
-                policy_engine=policy_engine,
-                allow_hooks=allow_hooks,
-            )
-            diagnostics.extend(render_diags)
-            if any(d.severity == Severity.ERROR for d in render_diags):
-                return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
+            if global_packs:
+                render_diags = render_bundled_packs(
+                    stage_dir=stage,
+                    repo_path=repo_path,
+                    pack_ids=[pack["id"] for pack in global_packs],
+                    answers=answers,
+                    catalog=pack_catalog,
+                    renderer=renderer_port,
+                    policy_engine=policy_engine,
+                    allow_hooks=allow_hooks,
+                )
+                diagnostics.extend(render_diags)
+                if any(d.severity == Severity.ERROR for d in render_diags):
+                    return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
-            _write_augmented(stage, augmented)
+            for service in services:
+                service_pkg = service_packages.get(service, service.replace("-", "_"))
+                service_answers = {
+                    **answers_base,
+                    "service_name": service,
+                    "service_pkg": service_pkg,
+                }
+                for pack in service_packs:
+                    pack_id = str(pack.get("id"))
+                    version = str(pack.get("version"))
+                    if pack_catalog is not None:
+                        pack_path = pack_catalog.get_pack_path(
+                            PackRef(id=pack_id, version=version, source="bundled")
+                        )
+                    else:
+                        pack_path = _bundled_packs_root() / pack_id.split(".")[-1]
+                    with tempfile.TemporaryDirectory() as tempdir:
+                        renderer_port.render(
+                            RenderRequest(
+                                pack=PackRef(id=pack_id, version=version, source="bundled"),
+                                pack_path=pack_path,
+                                staging_dir=Path(tempdir),
+                                answers=service_answers,
+                                allow_hooks=allow_hooks,
+                            )
+                        )
+                        copy_service_scoped(
+                            Path(tempdir),
+                            stage,
+                            repo_path,
+                            service,
+                            allow_openapi=pack_id == OPENAPI_PACK_ID,
+                        )
+
+            _write_augmented(stage, augmented, languages)
             _ensure_minimal_pants_toml(stage / "pants.toml")
             workspace.commit(stage)
+            _post_init_setup(repo_path, diagnostics)
             return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
         finally:
             if stage.exists():
@@ -259,5 +445,6 @@ def init_repo(
 
     write_lock(repo_path / ".pantsagon.toml", lock)
     _ensure_minimal_pants_toml(repo_path / "pants.toml")
-    _write_augmented(repo_path, augmented)
+    _write_augmented(repo_path, augmented, languages)
+    _post_init_setup(repo_path, diagnostics)
     return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))

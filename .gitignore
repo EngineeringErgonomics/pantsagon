@@ -6,3 +6,10 @@ site/
 .pants.d/
 .idea/
 .aider*
+
+# Local tools
+.tldr/
+.tldrignore
+
+# OS
+.DS_Store

@@ -10,7 +10,6 @@ def test_read_lock_missing(tmp_path):
 
 def test_write_lock_roundtrip(tmp_path):
     lock = {
-        "tool": {"name": "pantsagon", "version": "1.0.0"},
         "settings": {
             "renderer": "copier",
             "strict": False,
@@ -31,5 +30,4 @@ def test_write_lock_roundtrip(tmp_path):
     path = tmp_path / ".pantsagon.toml"
     write_lock(path, lock)
     parsed = tomllib.loads(path.read_text(encoding="utf-8"))
-    assert parsed["tool"]["name"] == "pantsagon"
     assert parsed["resolved"]["packs"][0]["id"] == "pantsagon.core"

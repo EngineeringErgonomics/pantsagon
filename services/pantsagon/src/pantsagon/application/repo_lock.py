@@ -65,12 +65,10 @@ def _render_table(lines: list[str], name: str, mapping: dict[str, Any]) -> None:
 
 def _fallback_dumps(lock: LockDict) -> str:
     lines: list[str] = []
-    tool = lock.get("tool", {}) if isinstance(lock.get("tool"), dict) else {}
     settings = lock.get("settings", {}) if isinstance(lock.get("settings"), dict) else {}
     selection = lock.get("selection", {}) if isinstance(lock.get("selection"), dict) else {}
     resolved = lock.get("resolved", {}) if isinstance(lock.get("resolved"), dict) else {}
 
-    _render_table(lines, "tool", tool)
     if settings:
         _render_table(lines, "settings", settings)
     if selection:

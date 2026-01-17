@@ -1,0 +1,91 @@
+# Hexagonal Dev Guide
+
+This repository is generated with strict hexagonal boundaries. The goal is to keep domain logic pure and prevent accidental coupling across layers.
+
+## Layout
+
+Each service layout depends on the language selection:
+
+- **Python**: `services/<service-name>/src/<pkg>/...`
+- **TypeScript**: `services/<service-name>/src/...`
+- **Rust**: `services/<service-name>/src/...`
+- **Go**: `services/<service-name>/internal/...` and `services/<service-name>/cmd/<service-name>/main.go`
+
+The hexagonal layers are consistent across languages:
+
+- `domain/` — pure types, rules, invariants (no IO)
+- `ports/` — interfaces/contracts the domain expects
+- `application/` — use-cases orchestrating domain + ports
+- `adapters/` — IO implementations (DB, HTTP, queues, etc.)
+- `entrypoints/` — wiring and delivery (CLI, HTTP handlers)
+
+Shared code lives under `shared/`:
+
+- `shared/foundation/` — cross-cutting primitives
+- `shared/contracts/` — schemas, OpenAPI, shared specs
+
+## Dependency Rules
+
+Allowed direction (outer -> inner):
+
+```
+entrypoints -> adapters -> application -> ports -> domain
+```
+
+Forbidden:
+
+- `domain` importing anything outside `domain`
+- `ports` importing from `adapters` or `entrypoints`
+- `application` importing from `adapters` or `entrypoints`
+
+## Adding a Service
+
+Use Pantsagon to add a new service and update `.pantsagon.toml`:
+
+```
+pants run services/pantsagon:cli -- add-service <name> --lang <language>
+```
+
+This renders service-scoped templates and updates the repo lock.
+
+## Building & Testing
+
+Common Pants commands:
+
+```
+pants lint ::
+pants check ::
+pants test ::
+```
+
+If your language/tooling requires additional setup (e.g., installing a compiler), run those installs locally before using Pants.
+
+## Guards & Hooks
+
+Guard scripts live under `tools/guards/`. Hooks are installed automatically into `.githooks/` and activated via:
+
+```
+git config core.hooksPath .githooks
+```
+
+To re-install hooks manually:
+
+```
+tools/guards/install-git-hooks.sh
+```
+
+## Forbidden Imports
+
+The `tools/forbidden_imports` tool enforces layer boundaries. Run it via:
+
+```
+pants run tools/forbidden_imports:check
+```
+
+The rules live in `tools/forbidden_imports/forbidden_imports.yaml` and are language-specific.
+
+## Common Pitfalls
+
+- Placing IO code in `domain/` or `application/`
+- Importing adapters directly from `application/`
+- Bypassing ports in tests (prefer port fakes in `application` tests)

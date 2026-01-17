@@ -80,16 +80,6 @@ def validate_repo(
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     lock = lock_result.value
-    tool = lock.get("tool")
-    if not isinstance(tool, dict):
-        diagnostics.append(
-            Diagnostic(
-                code="LOCK_SECTION_MISSING",
-                rule="lock.section",
-                severity=Severity.ERROR,
-                message="Missing [tool] section in .pantsagon.toml",
-            )
-        )
     resolved = lock.get("resolved")
     if not isinstance(resolved, dict):
         diagnostics.append(

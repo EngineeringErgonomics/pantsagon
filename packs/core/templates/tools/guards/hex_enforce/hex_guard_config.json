@@ -1,0 +1,28 @@
+{
+  "source_root": "services",
+  "tests_root": "tests",
+  "adapter_dirs": [
+    "/adapters/",
+    "/cupy_adapter/"
+  ],
+  "heavy_imports": [
+    "requests",
+    "fastapi",
+    "sqlalchemy",
+    "boto3"
+  ],
+  "ignore_globs": [
+    "**/.git/**",
+    "**/*.md",
+    "**/_hex_guard_tmp_manual/**"
+  ],
+  "whitelist_test_dirs": [
+    "wrapper_imports"
+  ],
+  "private_allow_prefixes": [
+    "test_support",
+    "test._stubs"
+  ],
+  "forbidden_test_imports": [
+  ]
+}

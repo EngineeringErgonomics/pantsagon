@@ -6,6 +6,7 @@ import shutil
 import tempfile
 from typing import Any
 
+from pantsagon.application.rendering import OPENAPI_PACK_ID, copy_service_scoped
 from pantsagon.application.repo_lock import effective_strict, project_reserved_services, read_lock, write_lock
 from pantsagon.domain.diagnostics import Diagnostic, Severity
 from pantsagon.domain.naming import BUILTIN_RESERVED_SERVICES, validate_service_name
@@ -16,8 +17,6 @@ from pantsagon.ports.policy_engine import PolicyEnginePort
 from pantsagon.ports.renderer import RenderRequest, RendererPort
 from pantsagon.ports.workspace import WorkspacePort
 
-
-OPENAPI_PACK_ID = "pantsagon.openapi"
 
 
 def _pack_roots() -> list[Path]:
@@ -120,46 +119,6 @@ def _resolve_pack_path(entry: dict[str, Any], repo_path: Path) -> tuple[Path | N
     )
     return None, diagnostics
 
-
-def _is_service_path(rel: Path, service_name: str) -> bool:
-    return len(rel.parts) >= 2 and rel.parts[0] == "services" and rel.parts[1] == service_name
-
-
-def _openapi_spec_path(service_name: str) -> Path:
-    return Path("shared") / "contracts" / "openapi" / f"{service_name}.yaml"
-
-
-def _openapi_readme_path() -> Path:
-    return Path("shared") / "contracts" / "openapi" / "README.md"
-
-
-def _copy_service_scoped(
-    temp_root: Path,
-    stage_root: Path,
-    repo_root: Path,
-    service_name: str,
-    allow_openapi: bool,
-) -> None:
-    spec_rel = _openapi_spec_path(service_name)
-    readme_rel = _openapi_readme_path()
-    for path in temp_root.rglob("*"):
-        if not path.is_file():
-            continue
-        rel = path.relative_to(temp_root)
-        dest = stage_root / rel
-        if _is_service_path(rel, service_name):
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(path, dest)
-            continue
-        if allow_openapi and rel == spec_rel:
-            if not dest.exists() and not (repo_root / rel).exists():
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(path, dest)
-            continue
-        if allow_openapi and rel == readme_rel:
-            if not dest.exists() and not (repo_root / rel).exists():
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(path, dest)
 
 
 def add_service(
@@ -324,7 +283,7 @@ def add_service(
                     )
                     return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
-                _copy_service_scoped(
+                copy_service_scoped(
                     Path(tempdir),
                     stage,
                     repo_path,

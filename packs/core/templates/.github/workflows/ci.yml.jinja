@@ -23,3 +23,5 @@ jobs:
         run: pants check ::
       - name: Pants test
         run: pants test ::
+      - name: Forbidden imports
+        run: pants run tools/forbidden_imports:check

@@ -1,8 +1,53 @@
+{% set langs = languages | default([]) %}
+{% set feats = features | default([]) %}
 [GLOBAL]
 pants_version = "2.30.0"
+
 backend_packages = [
+  "pants.backend.shell",
+  "pants.backend.experimental.visibility",
+{% if "python" in langs %}
   "pants.backend.python",
   "pants.backend.python.lint.ruff",
   "pants.backend.python.typecheck.pyright",
+{% endif %}
+{% if "typescript" in langs %}
+  "pants.backend.experimental.javascript",
+  "pants.backend.experimental.typescript",
+{% endif %}
+{% if "rust" in langs %}
+  "pants.backend.experimental.rust",
+{% endif %}
+{% if "go" in langs %}
+  "pants.backend.experimental.go",
+{% endif %}
+{% if "docker" in feats %}
   "pants.backend.docker",
+{% endif %}
 ]
+
+[source]
+root_patterns = [
+  "/services/**/src",
+  "/services/**/tests",
+{% if "go" in langs %}
+  "/services/**/cmd",
+  "/services/**/internal",
+{% endif %}
+  "/shared/**/src",
+  "/shared/**/tests",
+  "/shared/**/contracts",
+  "/tools/**/src",
+  "/tools/**/tests",
+  "/tools/forbidden_imports",
+  "/scripts",
+  "/docs",
+]
+
+{% if "python" in langs %}
+[python]
+interpreter_constraints = ["CPython>=3.12,<3.15"]
+
+[python-infer]
+unowned_dependency_behavior = "error"
+{% endif %}

@@ -2,9 +2,7 @@ from pantsagon.application.add_service import add_service
 
 
 def test_add_service_fails_on_existing(tmp_path):
-    (tmp_path / ".pantsagon.toml").write_text(
-        "[tool]\nname='pantsagon'\nversion='1.0.0'\n"
-    )
+    (tmp_path / ".pantsagon.toml").write_text("")
     svc_dir = tmp_path / "services" / "foo"
     svc_dir.mkdir(parents=True)
     result = add_service(repo_path=tmp_path, name="foo", lang="python")

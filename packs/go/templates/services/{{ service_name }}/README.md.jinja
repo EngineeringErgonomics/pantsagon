@@ -1,0 +1,9 @@
+# Service: {{ service_name }}
+
+Hexagonal layers:
+
+- `internal/domain/` - pure rules and types
+- `internal/ports/` - interfaces and contracts
+- `internal/application/` - use-cases
+- `internal/adapters/` - IO integrations
+- `cmd/{{ service_name }}/` - entrypoints

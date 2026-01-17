@@ -30,7 +30,10 @@ def test_core_pack_renders_minimum_skeleton(tmp_path):
     out.mkdir()
     _render(pack, out, {"repo_name": "acme"})
     assert (out / "pants.toml").exists()
-    assert (out / ".github" / "workflows" / "ci.yml").exists()
+    ci_path = out / ".github" / "workflows" / "ci.yml"
+    assert ci_path.exists()
+    ci_text = ci_path.read_text()
+    assert "pantsbuild/actions/init-pants" in ci_text
     assert (out / "shared" / "foundation" / "README.md").exists()
     assert (out / "docs" / "README.md").exists()
     assert (out / "docs" / "dev" / "hexagonal-dev-guide.md").exists()

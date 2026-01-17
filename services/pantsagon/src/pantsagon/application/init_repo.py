@@ -185,18 +185,28 @@ def _ensure_minimal_pants_toml(path: Path) -> None:
         path.write_text('[GLOBAL]\npants_version = "2.30.0"\n')
 
 
+def _has_shebang(path: Path) -> bool:
+    try:
+        with path.open("rb") as handle:
+            return handle.read(2) == b"#!"
+    except OSError:
+        return False
+
+
 def _make_executable_tree(path: Path) -> None:
     if not path.exists():
         return
     if path.is_file():
-        mode = path.stat().st_mode
-        path.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        if _has_shebang(path):
+            mode = path.stat().st_mode
+            path.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         return
     for file in path.rglob("*"):
         if not file.is_file():
             continue
-        mode = file.stat().st_mode
-        file.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        if _has_shebang(file):
+            mode = file.stat().st_mode
+            file.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
 def _post_init_setup(repo_path: Path, diagnostics: list[Diagnostic]) -> None:

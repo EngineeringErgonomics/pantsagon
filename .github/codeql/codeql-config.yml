@@ -1,0 +1,14 @@
+name: "CodeQL config"
+
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+paths-ignore:
+  - .pants.d
+  - dist
+  - site
+  - .venv
+  - "**/__pycache__"
+  - node_modules
+  # Keep 3rdparty/ included unless we confirm it contains only dependencies.

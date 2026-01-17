@@ -1,0 +1,128 @@
+name: CodeQL
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  detect-languages:
+    name: Detect languages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CODEQL_LANGUAGES: ${{ vars.CODEQL_LANGUAGES }}
+    outputs:
+      languages: ${{ steps.detect.outputs.languages }}
+    steps:
+      - name: Map Linguist to CodeQL languages
+        id: detect
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const supported = new Set([
+              "cpp",
+              "csharp",
+              "go",
+              "java-kotlin",
+              "javascript-typescript",
+              "python",
+              "ruby",
+              "swift",
+            ]);
+
+            const linguistToCodeQL = {
+              "C": "cpp",
+              "C++": "cpp",
+              "Objective-C": "cpp",
+              "Objective-C++": "cpp",
+              "C#": "csharp",
+              "Go": "go",
+              "Java": "java-kotlin",
+              "Kotlin": "java-kotlin",
+              "JavaScript": "javascript-typescript",
+              "TypeScript": "javascript-typescript",
+              "Python": "python",
+              "Ruby": "ruby",
+              "Swift": "swift",
+            };
+
+            const normalizeLanguages = (values) =>
+              values
+                .map((value) => String(value).trim())
+                .filter(Boolean)
+                .map((value) => linguistToCodeQL[value] ?? value)
+                .filter((value) => supported.has(value));
+
+            const parseOverride = (raw) => {
+              if (!raw) return [];
+              try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                  return normalizeLanguages(parsed);
+                }
+              } catch {
+                // Fall through to comma-separated parsing.
+              }
+              return normalizeLanguages(raw.split(","));
+            };
+
+            let detected = [];
+            try {
+              const { owner, repo } = context.repo;
+              const { data } = await github.rest.repos.listLanguages({ owner, repo });
+              detected = normalizeLanguages(Object.keys(data));
+            } catch (error) {
+              core.warning(`Language detection failed: ${error.message}`);
+            }
+
+            if (detected.length === 0) {
+              const override = parseOverride(process.env.CODEQL_LANGUAGES);
+              if (override.length > 0) {
+                core.info(`Using CODEQL_LANGUAGES override: ${override.join(', ')}`);
+                detected = override;
+              } else {
+                core.warning('No supported languages detected; falling back to ["python"].');
+                detected = ["python"];
+              }
+            }
+
+            const unique = Array.from(new Set(detected));
+            core.info(`CodeQL languages: ${unique.join(', ')}`);
+            core.setOutput('languages', JSON.stringify(unique));
+
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    needs: detect-languages
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ${{ fromJson(needs.detect-languages.outputs.languages) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+        # If autobuild fails for a language, replace with manual build steps:
+        # run: |
+        #   <your build commands>
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3

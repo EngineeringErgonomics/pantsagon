@@ -211,8 +211,9 @@ def validate_bundled_packs(
                 try:
                     if quiet:
                         with open(os.devnull, "w", encoding="utf-8") as devnull:
-                            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(
-                                devnull
+                            with (
+                                contextlib.redirect_stdout(devnull),
+                                contextlib.redirect_stderr(devnull),
                             ):
                                 renderer.render(request)
                     else:

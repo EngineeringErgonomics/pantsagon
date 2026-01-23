@@ -7,7 +7,12 @@ import tempfile
 from typing import Any
 
 from pantsagon.application.rendering import OPENAPI_PACK_ID, copy_service_scoped
-from pantsagon.application.repo_lock import effective_strict, project_reserved_services, read_lock, write_lock
+from pantsagon.application.repo_lock import (
+    effective_strict,
+    project_reserved_services,
+    read_lock,
+    write_lock,
+)
 from pantsagon.domain.diagnostics import Diagnostic, Severity
 from pantsagon.domain.naming import BUILTIN_RESERVED_SERVICES, validate_service_name
 from pantsagon.domain.pack import PackRef
@@ -16,7 +21,6 @@ from pantsagon.domain.strictness import apply_strictness
 from pantsagon.ports.policy_engine import PolicyEnginePort
 from pantsagon.ports.renderer import RenderRequest, RendererPort
 from pantsagon.ports.workspace import WorkspacePort
-
 
 
 def _pack_roots() -> list[Path]:
@@ -52,7 +56,9 @@ def _get_list(value: Any) -> list[Any]:
 
 def _build_answers(lock: dict[str, Any], repo_path: Path, name: str) -> dict[str, Any]:
     resolved = lock.get("resolved") if isinstance(lock.get("resolved"), dict) else {}
-    existing = resolved.get("answers") if isinstance(resolved.get("answers"), dict) else {}
+    existing = (
+        resolved.get("answers") if isinstance(resolved.get("answers"), dict) else {}
+    )
     answers = dict(existing)
     service_pkg = name.replace("-", "_")
     service_packages: dict[str, str] = {}
@@ -66,7 +72,9 @@ def _build_answers(lock: dict[str, Any], repo_path: Path, name: str) -> dict[str
     return answers
 
 
-def _resolve_pack_path(entry: dict[str, Any], repo_path: Path) -> tuple[Path | None, list[Diagnostic]]:
+def _resolve_pack_path(
+    entry: dict[str, Any], repo_path: Path
+) -> tuple[Path | None, list[Diagnostic]]:
     diagnostics: list[Diagnostic] = []
     pack_id = str(entry.get("id") or "")
     source = str(entry.get("source") or "")
@@ -96,7 +104,9 @@ def _resolve_pack_path(entry: dict[str, Any], repo_path: Path) -> tuple[Path | N
             )
             return None, diagnostics
         location_path = Path(str(location))
-        pack_path = location_path if location_path.is_absolute() else repo_path / location_path
+        pack_path = (
+            location_path if location_path.is_absolute() else repo_path / location_path
+        )
         if not pack_path.exists():
             diagnostics.append(
                 Diagnostic(
@@ -120,7 +130,6 @@ def _resolve_pack_path(entry: dict[str, Any], repo_path: Path) -> tuple[Path | N
     return None, diagnostics
 
 
-
 def add_service(
     repo_path: Path,
     name: str,
@@ -140,7 +149,9 @@ def add_service(
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     diagnostics.extend(
-        validate_service_name(name, BUILTIN_RESERVED_SERVICES, project_reserved_services(lock))
+        validate_service_name(
+            name, BUILTIN_RESERVED_SERVICES, project_reserved_services(lock)
+        )
     )
     if any(d.severity == Severity.ERROR for d in diagnostics):
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
@@ -263,7 +274,9 @@ def add_service(
 
             with tempfile.TemporaryDirectory() as tempdir:
                 request = RenderRequest(
-                    pack=PackRef(id=pack_id, version=version, source=str(entry.get("source"))),
+                    pack=PackRef(
+                        id=pack_id, version=version, source=str(entry.get("source"))
+                    ),
                     pack_path=pack_path,
                     staging_dir=Path(tempdir),
                     answers=answers,
@@ -281,7 +294,9 @@ def add_service(
                             is_execution=True,
                         )
                     )
-                    return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
+                    return Result(
+                        diagnostics=apply_strictness(diagnostics, strict_enabled)
+                    )
 
                 copy_service_scoped(
                     Path(tempdir),

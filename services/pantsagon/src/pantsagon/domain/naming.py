@@ -31,7 +31,9 @@ BUILTIN_RESERVED_SERVICES = {
 }
 
 
-def validate_service_name(name: str, builtins: set[str], project: set[str]) -> list[Diagnostic]:
+def validate_service_name(
+    name: str, builtins: set[str], project: set[str]
+) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
     if not SERVICE_PATTERN.match(name):
         diagnostics.append(

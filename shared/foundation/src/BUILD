@@ -1,13 +1,13 @@
 __dependents_rules__(
-  ("*", "*"),
+    ("*", "*"),
 )
 
 __dependencies_rules__(
-  ("*", "//shared/foundation/src/**", "!*"),
+    ("*", "//shared/foundation/src/**", "!*"),
 )
 
 python_sources(
-  name="lib",
-  sources=["**/*.py"],
-  tags=["shared:foundation"],
+    name="lib",
+    sources=["**/*.py"],
+    tags=["shared:foundation"],
 )

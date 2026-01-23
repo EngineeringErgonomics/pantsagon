@@ -29,7 +29,11 @@ def is_service_pack(manifest: dict[str, Any] | None) -> bool:
 
 
 def _is_service_path(rel: Path, service_name: str) -> bool:
-    return len(rel.parts) >= 2 and rel.parts[0] == "services" and rel.parts[1] == service_name
+    return (
+        len(rel.parts) >= 2
+        and rel.parts[0] == "services"
+        and rel.parts[1] == service_name
+    )
 
 
 def copy_service_scoped(

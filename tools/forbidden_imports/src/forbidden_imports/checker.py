@@ -45,9 +45,19 @@ def load_config(path: Path) -> Config:
                 for layer_name, rules in raw_layers.items():
                     if not isinstance(rules, dict):
                         continue
-                    include = list(rules.get("include", [])) if isinstance(rules.get("include"), list) else []
-                    deny = list(rules.get("deny", [])) if isinstance(rules.get("deny"), list) else []
-                    layers.append(LayerRule(name=str(layer_name), include=include, deny=deny))
+                    include = (
+                        list(rules.get("include", []))
+                        if isinstance(rules.get("include"), list)
+                        else []
+                    )
+                    deny = (
+                        list(rules.get("deny", []))
+                        if isinstance(rules.get("deny"), list)
+                        else []
+                    )
+                    layers.append(
+                        LayerRule(name=str(layer_name), include=include, deny=deny)
+                    )
             languages[str(lang_name)] = LanguageRule(
                 name=str(lang_name), extensions=extensions, layers=layers
             )
@@ -114,7 +124,9 @@ def _extract_imports_python(text: str) -> list[tuple[str, int]]:
     return hits
 
 
-_TS_IMPORT_RE = re.compile(r'^\s*(?:import|export)\s+(?:.+\s+from\s+)?[\'"]([^\'"]+)[\'"]')
+_TS_IMPORT_RE = re.compile(
+    r'^\s*(?:import|export)\s+(?:.+\s+from\s+)?[\'"]([^\'"]+)[\'"]'
+)
 _TS_REQUIRE_RE = re.compile(r'require\(\s*[\'"]([^\'"]+)[\'"]\s*\)')
 
 
@@ -129,7 +141,7 @@ def _extract_imports_typescript(text: str) -> list[tuple[str, int]]:
     return hits
 
 
-_RUST_USE_RE = re.compile(r'^\s*use\s+([A-Za-z0-9_:]+)')
+_RUST_USE_RE = re.compile(r"^\s*use\s+([A-Za-z0-9_:]+)")
 
 
 def _extract_imports_rust(text: str) -> list[tuple[str, int]]:
@@ -181,7 +193,9 @@ def _normalize_languages(languages: list[str] | None, config: Config) -> list[st
     return list(config.languages.keys())
 
 
-def scan_files(config: Config, files: list[Path], languages: list[str] | None = None) -> list[str]:
+def scan_files(
+    config: Config, files: list[Path], languages: list[str] | None = None
+) -> list[str]:
     violations: list[str] = []
     active = _normalize_languages(languages, config)
     for lang in active:
@@ -206,6 +220,8 @@ def scan_files(config: Config, files: list[Path], languages: list[str] | None = 
     return violations
 
 
-def scan_tree(config: Config, root: Path, languages: list[str] | None = None) -> list[str]:
+def scan_tree(
+    config: Config, root: Path, languages: list[str] | None = None
+) -> list[str]:
     files: list[Path] = [p for p in root.rglob("*") if p.is_file()]
     return scan_files(config, files, languages=languages)

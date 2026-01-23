@@ -93,7 +93,9 @@ def _order_packs_by_requires(packs: list[dict[str, Any]]) -> list[dict[str, Any]
 
     remaining = sorted([pid for pid in pack_ids if pid not in ordered_ids])
     ordered_ids.extend(remaining)
-    pack_by_id = {str(pack.get("id")): pack for pack in packs if pack.get("id") is not None}
+    pack_by_id = {
+        str(pack.get("id")): pack for pack in packs if pack.get("id") is not None
+    }
     return [pack_by_id[pid] for pid in ordered_ids]
 
 
@@ -226,7 +228,13 @@ def _post_init_setup(repo_path: Path, diagnostics: list[Diagnostic]) -> None:
         return
 
     try:
-        subprocess.run([git, "init"], cwd=repo_path, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(
+            [git, "init"],
+            cwd=repo_path,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
     except Exception as exc:
         diagnostics.append(
             Diagnostic(
@@ -251,7 +259,13 @@ def _post_init_setup(repo_path: Path, diagnostics: list[Diagnostic]) -> None:
         return
 
     try:
-        subprocess.run([str(hook_script)], cwd=repo_path, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(
+            [str(hook_script)],
+            cwd=repo_path,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
     except Exception as exc:
         diagnostics.append(
             Diagnostic(
@@ -281,7 +295,9 @@ def init_repo(
     diagnostics: list[Diagnostic] = []
     strict_enabled = bool(strict)
     for service in services:
-        diagnostics.extend(validate_service_name(service, BUILTIN_RESERVED_SERVICES, set()))
+        diagnostics.extend(
+            validate_service_name(service, BUILTIN_RESERVED_SERVICES, set())
+        )
     if any(d.severity == Severity.ERROR for d in diagnostics):
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
@@ -296,7 +312,9 @@ def init_repo(
     resolved_packs: list[dict[str, Any]] = []
     for pack_id in resolved_ids.value or []:
         if pack_catalog is not None:
-            pack_path = pack_catalog.get_pack_path(PackRef(id=pack_id, version="0.0.0", source="bundled"))
+            pack_path = pack_catalog.get_pack_path(
+                PackRef(id=pack_id, version="0.0.0", source="bundled")
+            )
         else:
             pack_path = _bundled_packs_root() / pack_id.split(".")[-1]
         if not pack_path.exists():
@@ -379,7 +397,9 @@ def init_repo(
     }
 
     ports_requested = any([renderer_port, pack_catalog, policy_engine, workspace])
-    if ports_requested and not all([renderer_port, pack_catalog, policy_engine, workspace]):
+    if ports_requested and not all(
+        [renderer_port, pack_catalog, policy_engine, workspace]
+    ):
         diagnostics.append(
             Diagnostic(
                 code="INIT_PORTS_MISSING",
@@ -408,7 +428,9 @@ def init_repo(
                 )
                 diagnostics.extend(render_diags)
                 if any(d.severity == Severity.ERROR for d in render_diags):
-                    return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
+                    return Result(
+                        diagnostics=apply_strictness(diagnostics, strict_enabled)
+                    )
 
             for service in services:
                 service_pkg = service_packages.get(service, service.replace("-", "_"))
@@ -429,7 +451,9 @@ def init_repo(
                     with tempfile.TemporaryDirectory() as tempdir:
                         renderer_port.render(
                             RenderRequest(
-                                pack=PackRef(id=pack_id, version=version, source="bundled"),
+                                pack=PackRef(
+                                    id=pack_id, version=version, source="bundled"
+                                ),
                                 pack_path=pack_path,
                                 staging_dir=Path(tempdir),
                                 answers=service_answers,

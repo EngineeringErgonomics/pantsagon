@@ -23,7 +23,9 @@ def test_write_lock_roundtrip(tmp_path):
             "augmented_coding": "none",
         },
         "resolved": {
-            "packs": [{"id": "pantsagon.core", "version": "1.0.0", "source": "bundled"}],
+            "packs": [
+                {"id": "pantsagon.core", "version": "1.0.0", "source": "bundled"}
+            ],
             "answers": {"repo_name": "demo"},
         },
     }

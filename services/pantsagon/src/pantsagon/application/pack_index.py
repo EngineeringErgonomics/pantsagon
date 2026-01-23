@@ -35,7 +35,9 @@ def load_pack_index(path: Path) -> PackIndex:
     return PackIndex(base_packs=base_packs, languages=languages, features=features)
 
 
-def resolve_pack_ids(index: PackIndex, languages: list[str], features: list[str]) -> Result[list[str]]:
+def resolve_pack_ids(
+    index: PackIndex, languages: list[str], features: list[str]
+) -> Result[list[str]]:
     diagnostics: list[Diagnostic] = []
     packs: list[str] = []
     packs.extend(index.base_packs)

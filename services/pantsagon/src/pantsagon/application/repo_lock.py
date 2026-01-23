@@ -40,7 +40,7 @@ def read_lock(path: Path) -> Result[LockDict]:
 
 
 def _toml_escape(value: str) -> str:
-    return value.replace("\\", "\\\\").replace("\"", "\\\"")
+    return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def _toml_value(value: Any) -> str:
@@ -49,11 +49,11 @@ def _toml_value(value: Any) -> str:
     if isinstance(value, (int, float)):
         return str(value)
     if isinstance(value, str):
-        return f"\"{_toml_escape(value)}\""
+        return f'"{_toml_escape(value)}"'
     if isinstance(value, list):
         inner = ", ".join(_toml_value(item) for item in value)
         return f"[{inner}]"
-    return f"\"{_toml_escape(str(value))}\""
+    return f'"{_toml_escape(str(value))}"'
 
 
 def _render_table(lines: list[str], name: str, mapping: dict[str, Any]) -> None:
@@ -65,9 +65,15 @@ def _render_table(lines: list[str], name: str, mapping: dict[str, Any]) -> None:
 
 def _fallback_dumps(lock: LockDict) -> str:
     lines: list[str] = []
-    settings = lock.get("settings", {}) if isinstance(lock.get("settings"), dict) else {}
-    selection = lock.get("selection", {}) if isinstance(lock.get("selection"), dict) else {}
-    resolved = lock.get("resolved", {}) if isinstance(lock.get("resolved"), dict) else {}
+    settings = (
+        lock.get("settings", {}) if isinstance(lock.get("settings"), dict) else {}
+    )
+    selection = (
+        lock.get("selection", {}) if isinstance(lock.get("selection"), dict) else {}
+    )
+    resolved = (
+        lock.get("resolved", {}) if isinstance(lock.get("resolved"), dict) else {}
+    )
 
     if settings:
         _render_table(lines, "settings", settings)
@@ -84,7 +90,9 @@ def _fallback_dumps(lock: LockDict) -> str:
                 lines.append(f"{key} = {_toml_value(pack[key])}")
         lines.append("")
 
-    answers = resolved.get("answers") if isinstance(resolved.get("answers"), dict) else {}
+    answers = (
+        resolved.get("answers") if isinstance(resolved.get("answers"), dict) else {}
+    )
     if answers:
         _render_table(lines, "resolved.answers", answers)
 

@@ -76,7 +76,7 @@ def test_go_rejects_import(tmp_path: Path) -> None:
     )
     bad = tmp_path / "domain" / "bad.go"
     bad.parent.mkdir(parents=True)
-    bad.write_text("package domain\nimport \"net/http\"\n")
+    bad.write_text('package domain\nimport "net/http"\n')
 
     config = load_config(cfg)
     violations = scan_files(config, [bad], languages=["go"])

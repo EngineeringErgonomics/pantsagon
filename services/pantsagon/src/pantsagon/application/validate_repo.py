@@ -7,8 +7,17 @@ from typing import Any
 import yaml
 
 from pantsagon.application.pack_index import load_pack_index, resolve_pack_ids
-from pantsagon.application.repo_lock import effective_strict, project_reserved_services, read_lock
-from pantsagon.domain.diagnostics import Diagnostic, FileLocation, Severity, ValueLocation
+from pantsagon.application.repo_lock import (
+    effective_strict,
+    project_reserved_services,
+    read_lock,
+)
+from pantsagon.domain.diagnostics import (
+    Diagnostic,
+    FileLocation,
+    Severity,
+    ValueLocation,
+)
 from pantsagon.domain.naming import (
     BUILTIN_RESERVED_SERVICES,
     validate_feature_name,
@@ -181,7 +190,11 @@ def validate_repo(
                 )
                 continue
             location_path = Path(str(location))
-            pack_path = location_path if location_path.is_absolute() else repo_path / location_path
+            pack_path = (
+                location_path
+                if location_path.is_absolute()
+                else repo_path / location_path
+            )
             if not pack_path.exists():
                 diagnostics.append(
                     Diagnostic(
@@ -247,7 +260,11 @@ def validate_repo(
         requires_block = manifest.get("requires")
         if isinstance(requires_block, dict):
             raw_requires = requires_block.get("packs")
-            requires = [str(item) for item in raw_requires] if isinstance(raw_requires, list) else []
+            requires = (
+                [str(item) for item in raw_requires]
+                if isinstance(raw_requires, list)
+                else []
+            )
         for req in requires:
             if req not in pack_ids:
                 diagnostics.append(
@@ -260,11 +277,15 @@ def validate_repo(
                 )
 
     selection = lock.get("selection") if isinstance(lock.get("selection"), dict) else {}
-    services = _get_list(selection.get("services")) if isinstance(selection, dict) else []
+    services = (
+        _get_list(selection.get("services")) if isinstance(selection, dict) else []
+    )
     reserved = project_reserved_services(lock)
     for svc in services:
         svc_name = str(svc)
-        diagnostics.extend(validate_service_name(svc_name, BUILTIN_RESERVED_SERVICES, reserved))
+        diagnostics.extend(
+            validate_service_name(svc_name, BUILTIN_RESERVED_SERVICES, reserved)
+        )
         svc_root = repo_path / "services" / svc_name
         if not svc_root.exists():
             diagnostics.append(
@@ -302,7 +323,9 @@ def validate_repo(
         index_path = _bundled_packs_root() / "_index.json"
         if index_path.exists():
             index = load_pack_index(index_path)
-            selection_result = resolve_pack_ids(index, languages=languages, features=features)
+            selection_result = resolve_pack_ids(
+                index, languages=languages, features=features
+            )
             diagnostics.extend(selection_result.diagnostics)
             expected = set(selection_result.value or [])
             if expected:

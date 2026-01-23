@@ -30,13 +30,7 @@ def test_init_generates_core_files(tmp_path, monkeypatch):
     service_root = tmp_path / "services" / "monitors"
     assert (service_root / "src" / "monitors" / "domain" / "__init__.py").exists()
     assert (service_root / "Dockerfile").exists()
-    assert (
-        tmp_path
-        / "shared"
-        / "contracts"
-        / "openapi"
-        / "monitors.yaml"
-    ).exists()
+    assert (tmp_path / "shared" / "contracts" / "openapi" / "monitors.yaml").exists()
 
 
 def test_init_generates_multiple_services(tmp_path, monkeypatch):
@@ -59,7 +53,9 @@ def test_init_generates_multiple_services(tmp_path, monkeypatch):
     )
     assert result.exit_code == 0
     assert (tmp_path / "services" / "monitors" / "src" / "monitors" / "domain").exists()
-    assert (tmp_path / "services" / "governance" / "src" / "governance" / "domain").exists()
+    assert (
+        tmp_path / "services" / "governance" / "src" / "governance" / "domain"
+    ).exists()
     assert (tmp_path / "shared" / "contracts" / "openapi" / "monitors.yaml").exists()
     assert (tmp_path / "shared" / "contracts" / "openapi" / "governance.yaml").exists()
 
@@ -99,11 +95,16 @@ def test_init_generates_multiple_services(tmp_path, monkeypatch):
                 "pants.backend.python.lint.ruff",
                 "pants.backend.python.typecheck.pyright",
             },
-            {"pants.backend.experimental.typescript", "pants.backend.experimental.rust"},
+            {
+                "pants.backend.experimental.typescript",
+                "pants.backend.experimental.rust",
+            },
         ),
     ],
 )
-def test_init_non_python_repo_pants_toml_is_clean(tmp_path, monkeypatch, lang, expected, unexpected):
+def test_init_non_python_repo_pants_toml_is_clean(
+    tmp_path, monkeypatch, lang, expected, unexpected
+):
     monkeypatch.setenv("PANTSAGON_DETERMINISTIC", "1")
     runner = CliRunner()
     result = runner.invoke(

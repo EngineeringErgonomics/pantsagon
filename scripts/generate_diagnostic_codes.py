@@ -47,7 +47,9 @@ def generate(repo_root: Path = REPO_ROOT) -> None:
         raise SystemExit("Invalid codes.yaml: expected top-level 'codes' list")
 
     lines: list[str] = []
-    lines.append(_render_generated_notice("python scripts/generate_diagnostic_codes.py"))
+    lines.append(
+        _render_generated_notice("python scripts/generate_diagnostic_codes.py")
+    )
     lines.append("")
     lines.append("# Diagnostic codes")
     lines.append("")
@@ -67,7 +69,9 @@ def generate(repo_root: Path = REPO_ROOT) -> None:
         hint = (item.get("hint") or "").strip().replace("\n", " ")
 
         if not code or not sev or not rule:
-            raise SystemExit(f"Invalid diagnostic entry (missing required fields): {item}")
+            raise SystemExit(
+                f"Invalid diagnostic entry (missing required fields): {item}"
+            )
 
         lines.append(f"| `{code}` | `{sev}` | `{rule}` | {msg} | {hint} |")
 

@@ -38,7 +38,10 @@ def test_init_repo_records_service_package(tmp_path):
     import tomllib
 
     data = tomllib.loads((tmp_path / ".pantsagon.toml").read_text())
-    assert data["resolved"]["answers"]["service_packages"]["monitor-cost"] == "monitor_cost"
+    assert (
+        data["resolved"]["answers"]["service_packages"]["monitor-cost"]
+        == "monitor_cost"
+    )
 
 
 def test_init_repo_installs_git_hooks(tmp_path):

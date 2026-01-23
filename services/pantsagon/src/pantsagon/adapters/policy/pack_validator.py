@@ -92,7 +92,9 @@ def validate_variable_names(manifest: Manifest) -> list[Diagnostic]:
     return diagnostics
 
 
-def crosscheck_variables(manifest: Manifest, copier_vars: dict[str, Any]) -> list[Diagnostic]:
+def crosscheck_variables(
+    manifest: Manifest, copier_vars: dict[str, Any]
+) -> list[Diagnostic]:
     raw_variables: object = manifest.get("variables", [])
     variables: list[dict[str, Any]] = []
     if isinstance(raw_variables, list):
@@ -120,8 +122,14 @@ def crosscheck_variables(manifest: Manifest, copier_vars: dict[str, Any]) -> lis
                 if isinstance(item, dict) and item.get("name") == name:
                     pack_default = item.get("default")
                     break
-        copier_default = _copier_default(copier_vars.get(name)) if name in copier_vars else None
-        if pack_default is not None and copier_default is not None and copier_default != pack_default:
+        copier_default = (
+            _copier_default(copier_vars.get(name)) if name in copier_vars else None
+        )
+        if (
+            pack_default is not None
+            and copier_default is not None
+            and copier_default != pack_default
+        ):
             diagnostics.append(
                 Diagnostic(
                     code="COPIER_DEFAULT_MISMATCH",

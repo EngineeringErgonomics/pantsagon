@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
 
-from forbidden_imports.checker import find_repo_root, load_config, load_languages, scan_tree
+from forbidden_imports.checker import (
+    find_repo_root,
+    load_config,
+    load_languages,
+    scan_tree,
+)
 
 
 def main() -> int:

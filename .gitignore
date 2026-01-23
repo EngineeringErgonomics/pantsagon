@@ -13,3 +13,4 @@ site/
 
 # OS
 .DS_Store
+/.hammer/

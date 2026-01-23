@@ -371,7 +371,6 @@ def init_repo(
     }
 
     ordered_packs = _render_order(resolved_packs)
-    ordered_ids = [pack["id"] for pack in ordered_packs]
     service_packs = [pack for pack in ordered_packs if pack.get("service_scoped")]
     global_packs = [pack for pack in ordered_packs if not pack.get("service_scoped")]
     lock: dict[str, Any] = {

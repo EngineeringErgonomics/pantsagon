@@ -4,24 +4,9 @@
   "title": "Pantsagon Repo Lock (.pantsagon.toml) (v1)",
   "description": "Single source of truth for a Pantsagon-generated repository.",
   "type": "object",
-  "required": ["tool", "resolved"],
+  "required": ["resolved"],
   "additionalProperties": false,
   "properties": {
-    "tool": {
-      "type": "object",
-      "required": ["name", "version"],
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string",
-          "const": "pantsagon"
-        },
-        "version": {
-          "type": "string",
-          "description": "Pantsagon tool version used to generate or update this repo."
-        }
-      }
-    },
     "settings": {
       "type": "object",
       "additionalProperties": false,

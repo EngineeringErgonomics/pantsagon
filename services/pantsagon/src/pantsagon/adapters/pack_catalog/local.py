@@ -1,12 +1,11 @@
 from pathlib import Path
-from typing import Any, cast
 
 import yaml
 
+from pantsagon.domain.json_types import JsonDict, as_json_dict
+
 
 class LocalPackCatalog:
-    def load_manifest(self, pack_dir: Path) -> dict[str, Any]:
+    def load_manifest(self, pack_dir: Path) -> JsonDict:
         raw: object = yaml.safe_load((pack_dir / "pack.yaml").read_text()) or {}
-        if isinstance(raw, dict):
-            return cast(dict[str, Any], raw)
-        return {}
+        return as_json_dict(raw)

@@ -4,8 +4,20 @@ from pantsagon.domain.strictness import apply_strictness
 
 def test_strictness_only_upgrades_upgradeable_warnings():
     diags = [
-        Diagnostic(code="W_UP", rule="r", severity=Severity.WARN, message="warn", upgradeable=True),
-        Diagnostic(code="W_NO", rule="r", severity=Severity.WARN, message="warn", upgradeable=False),
+        Diagnostic(
+            code="W_UP",
+            rule="r",
+            severity=Severity.WARN,
+            message="warn",
+            upgradeable=True,
+        ),
+        Diagnostic(
+            code="W_NO",
+            rule="r",
+            severity=Severity.WARN,
+            message="warn",
+            upgradeable=False,
+        ),
         Diagnostic(code="E", rule="r", severity=Severity.ERROR, message="err"),
     ]
     strict = apply_strictness(diags, strict=True)

@@ -6,7 +6,6 @@ import json
 import os
 import tempfile
 from pathlib import Path
-from typing import Any
 
 from pantsagon.adapters.errors import RendererExecutionError
 from pantsagon.adapters.policy import pack_validator
@@ -15,11 +14,12 @@ from pantsagon.adapters.renderer.copier_renderer import CopierRenderer
 from pantsagon.application.pack_validation import validate_pack
 from pantsagon.domain.determinism import is_deterministic
 from pantsagon.domain.diagnostics import Diagnostic, FileLocation, Severity
+from pantsagon.domain.json_types import JsonDict, JsonValue, as_json_dict
 from pantsagon.domain.pack import PackRef
 from pantsagon.domain.result import Result
 from pantsagon.ports.renderer import RenderRequest
 
-DEFAULTS_BY_NAME: dict[str, Any] = {
+DEFAULTS_BY_NAME: JsonDict = {
     "service_name": "example-service",
     "service_name_kebab": "example-service",
     "repo_name": "example-repo",
@@ -42,7 +42,7 @@ def _relative_path(path: Path, root: Path) -> str:
         return str(path)
 
 
-def _serialize_location(location: object | None) -> dict[str, Any] | None:
+def _serialize_location(location: object | None) -> JsonDict | None:
     if location is None:
         return None
     if isinstance(location, FileLocation):
@@ -53,11 +53,11 @@ def _serialize_location(location: object | None) -> dict[str, Any] | None:
             "col": location.col,
         }
     kind = getattr(location, "kind", "unknown")
-    return {"kind": kind}
+    return {"kind": str(kind)}
 
 
-def _serialize_diagnostic(diagnostic: Diagnostic) -> dict[str, Any]:
-    payload: dict[str, Any] = {
+def _serialize_diagnostic(diagnostic: Diagnostic) -> JsonDict:
+    payload: JsonDict = {
         "id": diagnostic.id,
         "code": diagnostic.code,
         "rule": diagnostic.rule,
@@ -73,7 +73,7 @@ def _serialize_diagnostic(diagnostic: Diagnostic) -> dict[str, Any]:
     return payload
 
 
-def _placeholder_for(var: dict[str, Any]) -> Any:
+def _placeholder_for(var: JsonDict) -> JsonValue:
     name = str(var.get("name", ""))
     if name in DEFAULTS_BY_NAME:
         return DEFAULTS_BY_NAME[name]
@@ -87,21 +87,22 @@ def _placeholder_for(var: dict[str, Any]) -> Any:
     if vtype == "enum":
         enum_values = var.get("enum")
         if isinstance(enum_values, list) and enum_values:
-            return enum_values[0]
+            return str(enum_values[0])
     return "example"
 
 
-def _build_answers(manifest: dict[str, Any]) -> dict[str, Any]:
-    answers: dict[str, Any] = {}
+def _build_answers(manifest: JsonDict) -> JsonDict:
+    answers: JsonDict = {}
     raw_variables = manifest.get("variables", [])
     if isinstance(raw_variables, list):
         for entry in raw_variables:
             if not isinstance(entry, dict):
                 continue
-            name = entry.get("name")
+            entry_dict = as_json_dict(entry)
+            name = entry_dict.get("name")
             if name is None:
                 continue
-            answers[str(name)] = _placeholder_for(entry)
+            answers[str(name)] = _placeholder_for(entry_dict)
     return answers
 
 
@@ -136,7 +137,7 @@ def _render_failed_diagnostic(
         severity=Severity.ERROR,
         message=str(error),
         location=FileLocation(_relative_path(pack_dir, root)),
-        details={"pack": pack_id},
+        details=as_json_dict({"pack": pack_id}),
         is_execution=True,
     )
 
@@ -147,13 +148,13 @@ def validate_bundled_packs(
     render_on_validation_error: bool,
     render_enabled: bool,
     quiet: bool,
-) -> Result[dict[str, Any]]:
+) -> Result[JsonDict]:
     root = _repo_root()
-    pack_validator.SCHEMA_PATH = pack_validator._schema_path(root)
+    pack_validator.SCHEMA_PATH = pack_validator.schema_path(root)
     engine = PackPolicyEngine()
     renderer = CopierRenderer()
     diagnostics: list[Diagnostic] = []
-    artifacts: list[dict[str, Any]] = []
+    artifacts: list[JsonDict] = []
 
     for pack_dir in _pack_dirs(packs_root):
         pack_diags: list[Diagnostic] = []
@@ -167,7 +168,7 @@ def validate_bundled_packs(
             pack_diags.append(diag)
             diagnostics.append(diag)
 
-        manifest: dict[str, Any] = {}
+        manifest: JsonDict = {}
         pack_id = pack_dir.name
         pack_version = "unknown"
         if (pack_dir / "pack.yaml").exists():
@@ -211,8 +212,9 @@ def validate_bundled_packs(
                 try:
                     if quiet:
                         with open(os.devnull, "w", encoding="utf-8") as devnull:
-                            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(
-                                devnull
+                            with (
+                                contextlib.redirect_stdout(devnull),
+                                contextlib.redirect_stderr(devnull),
                             ):
                                 renderer.render(request)
                     else:
@@ -224,14 +226,16 @@ def validate_bundled_packs(
                     status = "failed"
 
         artifacts.append(
-            {
-                "pack_id": pack_id,
-                "pack_version": pack_version,
-                "source": "bundled",
-                "status": status,
-                "render_skipped": render_skipped,
-                "diagnostics": [_serialize_diagnostic(d) for d in pack_diags],
-            }
+            as_json_dict(
+                {
+                    "pack_id": pack_id,
+                    "pack_version": pack_version,
+                    "source": "bundled",
+                    "status": status,
+                    "render_skipped": render_skipped,
+                    "diagnostics": [_serialize_diagnostic(d) for d in pack_diags],
+                }
+            )
         )
 
     return Result(value=None, diagnostics=diagnostics, artifacts=artifacts)

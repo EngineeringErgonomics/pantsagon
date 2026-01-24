@@ -24,7 +24,6 @@ def _repo_root() -> Path:
 
 def _base_lock(repo_path: Path) -> dict:
     return {
-        "tool": {"name": "pantsagon", "version": "1.0.0"},
         "settings": {
             "renderer": "copier",
             "strict": False,

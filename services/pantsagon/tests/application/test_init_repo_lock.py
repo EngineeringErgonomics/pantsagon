@@ -12,7 +12,7 @@ def test_init_repo_writes_full_lock(tmp_path):
         renderer="copier",
     )
     lock = tomllib.loads((tmp_path / ".pantsagon.toml").read_text(encoding="utf-8"))
-    assert "tool" in lock
+    assert "tool" not in lock
     assert "settings" in lock
     assert "selection" in lock
     assert "resolved" in lock

@@ -1,0 +1,16 @@
+schema_version: 1
+id: pantsagon.typescript
+version: 1.0.0
+description: TypeScript service skeleton
+compatibility:
+  pants: ">=2.30.0"
+  languages:
+    typescript: ">=4.0"
+requires:
+  packs:
+    - pantsagon.core
+variables:
+  - name: service_name
+    type: string
+  - name: service_pkg
+    type: string

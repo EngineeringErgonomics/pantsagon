@@ -4,20 +4,31 @@ from pathlib import Path
 import os
 import shutil
 import tempfile
-from typing import Any
+from typing import TypeGuard
 
-from pantsagon.application.repo_lock import effective_strict, project_reserved_services, read_lock, write_lock
+from pantsagon.application.rendering import OPENAPI_PACK_ID, copy_service_scoped
+from pantsagon.application.repo_lock import (
+    LockDict,
+    effective_strict,
+    project_reserved_services,
+    read_lock,
+    write_lock,
+)
 from pantsagon.domain.diagnostics import Diagnostic, Severity
+from pantsagon.domain.json_types import (
+    JsonDict,
+    JsonValue,
+    as_json_dict,
+    as_json_list,
+    coerce_json_value,
+)
 from pantsagon.domain.naming import BUILTIN_RESERVED_SERVICES, validate_service_name
-from pantsagon.domain.pack import PackRef
+from pantsagon.domain.pack import PackRef, PackSource
 from pantsagon.domain.result import Result
 from pantsagon.domain.strictness import apply_strictness
 from pantsagon.ports.policy_engine import PolicyEnginePort
 from pantsagon.ports.renderer import RenderRequest, RendererPort
 from pantsagon.ports.workspace import WorkspacePort
-
-
-OPENAPI_PACK_ID = "pantsagon.openapi"
 
 
 def _pack_roots() -> list[Path]:
@@ -47,18 +58,31 @@ def _bundled_pack_path(pack_id: str) -> Path | None:
     return None
 
 
-def _get_list(value: Any) -> list[Any]:
-    return list(value) if isinstance(value, list) else []
+def _get_list(value: object) -> list[JsonValue]:
+    return as_json_list(value)
 
 
-def _build_answers(lock: dict[str, Any], repo_path: Path, name: str) -> dict[str, Any]:
-    resolved = lock.get("resolved") if isinstance(lock.get("resolved"), dict) else {}
-    existing = resolved.get("answers") if isinstance(resolved.get("answers"), dict) else {}
-    answers = dict(existing)
+def _is_pack_source(value: object) -> TypeGuard[PackSource]:
+    return isinstance(value, str) and value in {"bundled", "local", "git", "registry"}
+
+
+def _coerce_pack_source(value: object) -> PackSource | None:
+    return value if _is_pack_source(value) else None
+
+
+def _as_dict(value: object) -> JsonDict:
+    return as_json_dict(value)
+
+
+def _build_answers(lock: LockDict, repo_path: Path, name: str) -> JsonDict:
+    resolved = _as_dict(lock.get("resolved"))
+    existing = as_json_dict(resolved.get("answers"))
+    answers: JsonDict = dict(existing)
     service_pkg = name.replace("-", "_")
-    service_packages: dict[str, str] = {}
-    if isinstance(existing.get("service_packages"), dict):
-        service_packages = dict(existing.get("service_packages", {}))
+    service_packages: JsonDict = {}
+    existing_pkgs = existing.get("service_packages")
+    if isinstance(existing_pkgs, dict):
+        service_packages = as_json_dict(existing_pkgs)
     service_packages[name] = service_pkg
     answers.setdefault("repo_name", repo_path.name)
     answers["service_name"] = name
@@ -67,10 +91,12 @@ def _build_answers(lock: dict[str, Any], repo_path: Path, name: str) -> dict[str
     return answers
 
 
-def _resolve_pack_path(entry: dict[str, Any], repo_path: Path) -> tuple[Path | None, list[Diagnostic]]:
+def _resolve_pack_path(
+    entry: JsonDict, repo_path: Path
+) -> tuple[Path | None, list[Diagnostic]]:
     diagnostics: list[Diagnostic] = []
     pack_id = str(entry.get("id") or "")
-    source = str(entry.get("source") or "")
+    source = _coerce_pack_source(entry.get("source"))
     if source == "bundled":
         pack_path = _bundled_pack_path(pack_id)
         if pack_path is None or not pack_path.exists():
@@ -97,7 +123,9 @@ def _resolve_pack_path(entry: dict[str, Any], repo_path: Path) -> tuple[Path | N
             )
             return None, diagnostics
         location_path = Path(str(location))
-        pack_path = location_path if location_path.is_absolute() else repo_path / location_path
+        pack_path = (
+            location_path if location_path.is_absolute() else repo_path / location_path
+        )
         if not pack_path.exists():
             diagnostics.append(
                 Diagnostic(
@@ -121,47 +149,6 @@ def _resolve_pack_path(entry: dict[str, Any], repo_path: Path) -> tuple[Path | N
     return None, diagnostics
 
 
-def _is_service_path(rel: Path, service_name: str) -> bool:
-    return len(rel.parts) >= 2 and rel.parts[0] == "services" and rel.parts[1] == service_name
-
-
-def _openapi_spec_path(service_name: str) -> Path:
-    return Path("shared") / "contracts" / "openapi" / f"{service_name}.yaml"
-
-
-def _openapi_readme_path() -> Path:
-    return Path("shared") / "contracts" / "openapi" / "README.md"
-
-
-def _copy_service_scoped(
-    temp_root: Path,
-    stage_root: Path,
-    repo_root: Path,
-    service_name: str,
-    allow_openapi: bool,
-) -> None:
-    spec_rel = _openapi_spec_path(service_name)
-    readme_rel = _openapi_readme_path()
-    for path in temp_root.rglob("*"):
-        if not path.is_file():
-            continue
-        rel = path.relative_to(temp_root)
-        dest = stage_root / rel
-        if _is_service_path(rel, service_name):
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(path, dest)
-            continue
-        if allow_openapi and rel == spec_rel:
-            if not dest.exists() and not (repo_root / rel).exists():
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(path, dest)
-            continue
-        if allow_openapi and rel == readme_rel:
-            if not dest.exists() and not (repo_root / rel).exists():
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(path, dest)
-
-
 def add_service(
     repo_path: Path,
     name: str,
@@ -175,13 +162,16 @@ def add_service(
     diagnostics: list[Diagnostic] = []
     lock_result = read_lock(repo_path / ".pantsagon.toml")
     diagnostics.extend(lock_result.diagnostics)
-    lock = lock_result.value
-    strict_enabled = effective_strict(strict, lock)
-    if lock is None:
+    lock_value = lock_result.value
+    strict_enabled = effective_strict(strict, lock_value)
+    if lock_value is None:
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
+    lock: LockDict = lock_value
 
     diagnostics.extend(
-        validate_service_name(name, BUILTIN_RESERVED_SERVICES, project_reserved_services(lock))
+        validate_service_name(
+            name, BUILTIN_RESERVED_SERVICES, project_reserved_services(lock)
+        )
     )
     if any(d.severity == Severity.ERROR for d in diagnostics):
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
@@ -198,8 +188,8 @@ def add_service(
         )
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
-    selection = lock.get("selection") if isinstance(lock.get("selection"), dict) else {}
-    existing_services = _get_list(selection.get("services"))
+    selection = _as_dict(lock.get("selection"))
+    existing_services = [str(item) for item in _get_list(selection.get("services"))]
     if name in existing_services:
         diagnostics.append(
             Diagnostic(
@@ -211,8 +201,8 @@ def add_service(
         )
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
-    resolved = lock.get("resolved")
-    if not isinstance(resolved, dict):
+    resolved_raw = lock.get("resolved")
+    if not isinstance(resolved_raw, dict):
         diagnostics.append(
             Diagnostic(
                 code="LOCK_SECTION_MISSING",
@@ -222,6 +212,7 @@ def add_service(
             )
         )
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
+    resolved = _as_dict(resolved_raw)
 
     raw_packs = resolved.get("packs")
     packs = _get_list(raw_packs)
@@ -236,7 +227,7 @@ def add_service(
         )
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
-    pack_entries: list[dict[str, Any]] = []
+    pack_entries: list[JsonDict] = []
     pack_ids: set[str] = set()
     for entry in packs:
         if not isinstance(entry, dict):
@@ -249,10 +240,11 @@ def add_service(
                 )
             )
             continue
-        pack_id = entry.get("id")
-        version = entry.get("version")
-        source = entry.get("source")
-        if not pack_id or not version or not source:
+        entry_dict = as_json_dict(entry)
+        pack_id = entry_dict.get("id")
+        version = entry_dict.get("version")
+        source = _coerce_pack_source(entry_dict.get("source"))
+        if not pack_id or not version or source is None:
             diagnostics.append(
                 Diagnostic(
                     code="LOCK_PACK_INVALID",
@@ -262,7 +254,9 @@ def add_service(
                 )
             )
             continue
-        pack_entries.append(entry)
+        entry_out = dict(entry_dict)
+        entry_out["source"] = source
+        pack_entries.append(entry_out)
         pack_ids.add(str(pack_id))
 
     if any(d.severity == Severity.ERROR for d in diagnostics):
@@ -279,10 +273,14 @@ def add_service(
         )
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
+    assert renderer_port is not None
+    assert policy_engine is not None
+    assert workspace is not None
     renderer = renderer_port
     engine = policy_engine
     workspace_impl = workspace
-    allow_hooks = bool(lock.get("settings", {}).get("allow_hooks", False))
+    settings = _as_dict(lock.get("settings"))
+    allow_hooks = bool(settings.get("allow_hooks", False))
 
     answers = _build_answers(lock, repo_path, name)
     allow_openapi = OPENAPI_PACK_ID in pack_ids
@@ -292,6 +290,17 @@ def add_service(
         for entry in pack_entries:
             pack_id = str(entry.get("id"))
             version = str(entry.get("version"))
+            source = entry.get("source")
+            if not _is_pack_source(source):
+                diagnostics.append(
+                    Diagnostic(
+                        code="LOCK_PACK_INVALID",
+                        rule="lock.resolved.packs",
+                        severity=Severity.ERROR,
+                        message="Pack entry must include a supported source",
+                    )
+                )
+                return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
             pack_path, pack_diags = _resolve_pack_path(entry, repo_path)
             diagnostics.extend(pack_diags)
             if pack_path is None:
@@ -304,7 +313,11 @@ def add_service(
 
             with tempfile.TemporaryDirectory() as tempdir:
                 request = RenderRequest(
-                    pack=PackRef(id=pack_id, version=version, source=str(entry.get("source"))),
+                    pack=PackRef(
+                        id=pack_id,
+                        version=version,
+                        source=source,
+                    ),
                     pack_path=pack_path,
                     staging_dir=Path(tempdir),
                     answers=answers,
@@ -322,9 +335,11 @@ def add_service(
                             is_execution=True,
                         )
                     )
-                    return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
+                    return Result(
+                        diagnostics=apply_strictness(diagnostics, strict_enabled)
+                    )
 
-                _copy_service_scoped(
+                copy_service_scoped(
                     Path(tempdir),
                     stage,
                     repo_path,
@@ -335,7 +350,7 @@ def add_service(
         selection = dict(selection)
         selection_services = list(existing_services)
         selection_services.append(name)
-        selection["services"] = selection_services
+        selection["services"] = coerce_json_value(selection_services)
         lock["selection"] = selection
         resolved["answers"] = answers
         lock["resolved"] = resolved

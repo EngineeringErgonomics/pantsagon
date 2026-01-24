@@ -1,0 +1,18 @@
+schema_version: 1
+id: pantsagon.go
+version: 1.0.0
+description: Go service skeleton
+compatibility:
+  pants: ">=2.30.0"
+  languages:
+    go: ">=1.20"
+requires:
+  packs:
+    - pantsagon.core
+variables:
+  - name: service_name
+    type: string
+  - name: service_pkg
+    type: string
+  - name: repo_name
+    type: string

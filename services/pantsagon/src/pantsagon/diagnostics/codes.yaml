@@ -43,6 +43,12 @@ codes:
     message: Init requires renderer, pack catalog, policy engine, and workspace ports.
     hint: Ensure the entrypoint wires required adapters for init.
 
+  - code: INIT_HOOKS_SETUP_FAILED
+    severity: warn
+    rule: init.hooks
+    message: Git hook setup failed.
+    hint: Ensure git is installed and rerun tools/guards/install-git-hooks.sh.
+
   - code: ADD_SERVICE_PORTS_MISSING
     severity: error
     rule: add_service.ports

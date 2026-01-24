@@ -23,7 +23,6 @@ def _repo_root() -> Path:
 
 def _base_lock(repo_path: Path) -> dict:
     return {
-        "tool": {"name": "pantsagon", "version": "1.0.0"},
         "settings": {
             "renderer": "copier",
             "strict": False,
@@ -65,9 +64,5 @@ def test_cli_add_service_renders_scoped_files(tmp_path, monkeypatch):
     assert (service_root / "src" / "monitor_cost" / "domain").exists()
     assert (service_root / "Dockerfile").exists()
     assert (
-        tmp_path
-        / "shared"
-        / "contracts"
-        / "openapi"
-        / "monitor-cost.yaml"
+        tmp_path / "shared" / "contracts" / "openapi" / "monitor-cost.yaml"
     ).exists()

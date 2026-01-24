@@ -1,4 +1,5 @@
 from pathlib import Path
+import logging
 
 from pantsagon.adapters.errors import RendererExecutionError
 from pantsagon.domain.json_types import as_json_dict
@@ -33,8 +34,12 @@ def _ensure_githooks(staging_dir: Path) -> None:
             try:
                 if hook_path.read_text() == content:
                     continue
-            except Exception:
-                pass
+            except Exception as exc:
+                logging.getLogger(__name__).warning(
+                    "Failed to read existing git hook at %s: %s",
+                    hook_path,
+                    exc,
+                )
         hooks_dir.mkdir(parents=True, exist_ok=True)
         hook_path.write_text(content)
 

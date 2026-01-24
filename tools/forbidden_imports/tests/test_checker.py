@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import forbidden_imports.checker as checker
-from forbidden_imports.checker import load_config, load_languages, scan_files
 
 
 def test_ports_reject_framework_import(tmp_path: Path) -> None:
@@ -19,8 +18,8 @@ def test_ports_reject_framework_import(tmp_path: Path) -> None:
     bad.parent.mkdir(parents=True)
     bad.write_text("import fastapi\n")
 
-    config = load_config(cfg)
-    violations = scan_files(config, [bad], languages=["python"])
+    config = checker.load_config(cfg)
+    violations = checker.scan_files(config, [bad], languages=["python"])
     assert violations, "Expected a violation for ports layer"
 
 
@@ -39,8 +38,8 @@ def test_typescript_rejects_import(tmp_path: Path) -> None:
     bad.parent.mkdir(parents=True)
     bad.write_text("import axios from 'axios'\\n")
 
-    config = load_config(cfg)
-    violations = scan_files(config, [bad], languages=["typescript"])
+    config = checker.load_config(cfg)
+    violations = checker.scan_files(config, [bad], languages=["typescript"])
     assert violations, "Expected a violation for TypeScript domain layer"
 
 
@@ -59,8 +58,8 @@ def test_rust_rejects_import(tmp_path: Path) -> None:
     bad.parent.mkdir(parents=True)
     bad.write_text("use reqwest::Client;\\n")
 
-    config = load_config(cfg)
-    violations = scan_files(config, [bad], languages=["rust"])
+    config = checker.load_config(cfg)
+    violations = checker.scan_files(config, [bad], languages=["rust"])
     assert violations, "Expected a violation for Rust domain layer"
 
 
@@ -79,8 +78,8 @@ def test_go_rejects_import(tmp_path: Path) -> None:
     bad.parent.mkdir(parents=True)
     bad.write_text('package domain\nimport "net/http"\n')
 
-    config = load_config(cfg)
-    violations = scan_files(config, [bad], languages=["go"])
+    config = checker.load_config(cfg)
+    violations = checker.scan_files(config, [bad], languages=["go"])
     assert violations, "Expected a violation for Go domain layer"
 
 
@@ -88,4 +87,4 @@ def test_load_languages_handles_non_mapping_toml(tmp_path: Path, monkeypatch) ->
     lock_path = tmp_path / ".pantsagon.toml"
     lock_path.write_text("selection = 'oops'\n")
     monkeypatch.setattr(checker.tomllib, "loads", lambda _: ["nope"])
-    assert load_languages(lock_path) == ["python"]
+    assert checker.load_languages(lock_path) == ["python"]

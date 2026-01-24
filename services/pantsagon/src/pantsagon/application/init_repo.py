@@ -6,7 +6,6 @@ import subprocess
 import stat
 from pathlib import Path
 import os
-from typing import Any
 
 import yaml
 
@@ -19,6 +18,7 @@ from pantsagon.application.rendering import (
 )
 from pantsagon.application.repo_lock import write_lock
 from pantsagon.domain.diagnostics import Diagnostic, Severity
+from pantsagon.domain.json_types import JsonDict, as_json_dict, coerce_json_value
 from pantsagon.domain.naming import BUILTIN_RESERVED_SERVICES, validate_service_name
 from pantsagon.domain.pack import PackRef
 from pantsagon.domain.result import Result
@@ -47,15 +47,15 @@ def _bundled_packs_root() -> Path:
     return _repo_root() / "packs"
 
 
-def _load_manifest(pack_path: Path) -> dict[str, Any]:
+def _load_manifest(pack_path: Path) -> JsonDict:
     try:
         raw: object = yaml.safe_load((pack_path / "pack.yaml").read_text()) or {}
     except FileNotFoundError:
         return {}
-    return raw if isinstance(raw, dict) else {}
+    return as_json_dict(raw)
 
 
-def _extract_requires(manifest: dict[str, Any]) -> list[str]:
+def _extract_requires(manifest: JsonDict) -> list[str]:
     requires_block = manifest.get("requires")
     if isinstance(requires_block, dict):
         raw = requires_block.get("packs")
@@ -64,13 +64,16 @@ def _extract_requires(manifest: dict[str, Any]) -> list[str]:
     return []
 
 
-def _order_packs_by_requires(packs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _order_packs_by_requires(packs: list[JsonDict]) -> list[JsonDict]:
     pack_ids = {str(pack.get("id")) for pack in packs if pack.get("id") is not None}
     requires_map: dict[str, set[str]] = {}
     for pack in packs:
         pack_id = str(pack.get("id"))
         raw_requires = pack.get("requires")
-        requires = set(raw_requires) if isinstance(raw_requires, list) else set()
+        if isinstance(raw_requires, list):
+            requires: set[str] = {str(req) for req in raw_requires}
+        else:
+            requires = set[str]()
         requires_map[pack_id] = {req for req in requires if req in pack_ids}
 
     dependents: dict[str, set[str]] = {pid: set() for pid in pack_ids}
@@ -99,7 +102,7 @@ def _order_packs_by_requires(packs: list[dict[str, Any]]) -> list[dict[str, Any]
     return [pack_by_id[pid] for pid in ordered_ids]
 
 
-def _render_order(packs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _render_order(packs: list[JsonDict]) -> list[JsonDict]:
     ordered = _order_packs_by_requires(packs)
     core = [pack for pack in ordered if pack.get("id") == "pantsagon.core"]
     rest = [pack for pack in ordered if pack.get("id") != "pantsagon.core"]
@@ -309,7 +312,7 @@ def init_repo(
     if any(d.severity == Severity.ERROR for d in diagnostics):
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
-    resolved_packs: list[dict[str, Any]] = []
+    resolved_packs: list[JsonDict] = []
     for pack_id in resolved_ids.value or []:
         if pack_catalog is not None:
             pack_path = pack_catalog.get_pack_path(
@@ -328,7 +331,7 @@ def init_repo(
             )
             continue
 
-        manifest: dict[str, Any] = {}
+        manifest: JsonDict = {}
         if pack_catalog is not None:
             manifest = pack_catalog.load_manifest(pack_path)
         else:
@@ -347,7 +350,7 @@ def init_repo(
                 "id": pack_id,
                 "version": str(manifest.get("version", "0.0.0")),
                 "source": "bundled",
-                "requires": _extract_requires(manifest),
+                "requires": coerce_json_value(_extract_requires(manifest)),
                 "service_scoped": is_service_pack(manifest),
             }
         )
@@ -356,15 +359,18 @@ def init_repo(
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     service_packages = {name: name.replace("-", "_") for name in services}
+    service_packages_json = as_json_dict(service_packages)
     service_name = services[0] if services else "service"
     service_pkg = service_packages.get(service_name, service_name.replace("-", "_"))
-    answers_base = {
+    languages_json = coerce_json_value(languages)
+    features_json = coerce_json_value(features)
+    answers_base: JsonDict = {
         "repo_name": repo_path.name,
-        "service_packages": service_packages,
-        "languages": languages,
-        "features": features,
+        "service_packages": service_packages_json,
+        "languages": languages_json,
+        "features": features_json,
     }
-    answers = {
+    answers: JsonDict = {
         **answers_base,
         "service_name": service_name,
         "service_pkg": service_pkg,
@@ -373,7 +379,7 @@ def init_repo(
     ordered_packs = _render_order(resolved_packs)
     service_packs = [pack for pack in ordered_packs if pack.get("service_scoped")]
     global_packs = [pack for pack in ordered_packs if not pack.get("service_scoped")]
-    lock: dict[str, Any] = {
+    lock: JsonDict = {
         "settings": {
             "renderer": renderer,
             "strict": strict_enabled,
@@ -381,9 +387,9 @@ def init_repo(
             "allow_hooks": allow_hooks,
         },
         "selection": {
-            "languages": languages,
-            "features": features,
-            "services": services,
+            "languages": languages_json,
+            "features": features_json,
+            "services": coerce_json_value(services),
             "augmented_coding": augmented_coding or "none",
         },
         "resolved": {
@@ -411,6 +417,9 @@ def init_repo(
 
     augmented = augmented_coding or "none"
     if ports_requested and workspace is not None:
+        assert renderer_port is not None
+        assert pack_catalog is not None
+        assert policy_engine is not None
         stage = workspace.begin_transaction()
         try:
             write_lock(stage / ".pantsagon.toml", lock)
@@ -418,7 +427,7 @@ def init_repo(
                 render_diags = render_bundled_packs(
                     stage_dir=stage,
                     repo_path=repo_path,
-                    pack_ids=[pack["id"] for pack in global_packs],
+                    pack_ids=[str(pack.get("id")) for pack in global_packs],
                     answers=answers,
                     catalog=pack_catalog,
                     renderer=renderer_port,
@@ -433,7 +442,7 @@ def init_repo(
 
             for service in services:
                 service_pkg = service_packages.get(service, service.replace("-", "_"))
-                service_answers = {
+                service_answers: JsonDict = {
                     **answers_base,
                     "service_name": service,
                     "service_pkg": service_pkg,
@@ -441,12 +450,9 @@ def init_repo(
                 for pack in service_packs:
                     pack_id = str(pack.get("id"))
                     version = str(pack.get("version"))
-                    if pack_catalog is not None:
-                        pack_path = pack_catalog.get_pack_path(
-                            PackRef(id=pack_id, version=version, source="bundled")
-                        )
-                    else:
-                        pack_path = _bundled_packs_root() / pack_id.split(".")[-1]
+                    pack_path = pack_catalog.get_pack_path(
+                        PackRef(id=pack_id, version=version, source="bundled")
+                    )
                     with tempfile.TemporaryDirectory() as tempdir:
                         renderer_port.render(
                             RenderRequest(

@@ -1,4 +1,7 @@
-shell_sources()
+shell_sources(
+    name="test_speed_enforce",
+    sources=["test_speed_guards.sh"],
+)
 
 resources(
     name="test_speed_guard_resources",

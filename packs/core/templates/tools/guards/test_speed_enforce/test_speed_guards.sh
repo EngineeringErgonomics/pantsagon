@@ -6,16 +6,81 @@ set -euo pipefail
 # or explicitly allowed test utilities (e.g., pytest, hypothesis, pydantic, test_support).
 # Everything else is a violation. Fails fast with an actionable report.
 
-ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-CONFIG_FILE="${TEST_SPEED_GUARD_CONFIG:-$ROOT_DIR/tools/guards/test_speed_enforce/test_speed_guard_config.json}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "$ROOT_DIR" ]]; then
+	ROOT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+fi
+DEFAULT_CONFIG="$ROOT_DIR/tools/guards/test_speed_enforce/test_speed_guard_config.json"
+if [[ ! -f "$DEFAULT_CONFIG" ]]; then
+	DEFAULT_CONFIG="$SCRIPT_DIR/test_speed_guard_config.json"
+fi
+CONFIG_FILE="${TEST_SPEED_GUARD_CONFIG:-$DEFAULT_CONFIG}"
+FALLBACK_CONFIG=""
+
+if [[ -n "${TEST_SPEED_GUARD_CONFIG:-}" && ! -f "$TEST_SPEED_GUARD_CONFIG" ]]; then
+	resolved=""
+	if [[ "$TEST_SPEED_GUARD_CONFIG" != /* ]]; then
+		if [[ -f "$ROOT_DIR/$TEST_SPEED_GUARD_CONFIG" ]]; then
+			resolved="$ROOT_DIR/$TEST_SPEED_GUARD_CONFIG"
+		elif [[ -f "$SCRIPT_DIR/$TEST_SPEED_GUARD_CONFIG" ]]; then
+			resolved="$SCRIPT_DIR/$TEST_SPEED_GUARD_CONFIG"
+		fi
+	fi
+	if [[ -n "$resolved" ]]; then
+		CONFIG_FILE="$resolved"
+	else
+		echo "[test-speed-guards] WARN: config not found at $TEST_SPEED_GUARD_CONFIG; falling back to $DEFAULT_CONFIG" >&2
+		CONFIG_FILE="$DEFAULT_CONFIG"
+	fi
+fi
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
-	echo "[test-speed-guards] ERROR: config not found: $CONFIG_FILE" >&2
-	exit 2
+	if [[ -f "$DEFAULT_CONFIG" ]]; then
+		CONFIG_FILE="$DEFAULT_CONFIG"
+	else
+		echo "[test-speed-guards] WARN: config not found: $CONFIG_FILE; using fallback defaults." >&2
+		source_root="src"
+		if [[ -d "$ROOT_DIR/services" ]]; then
+			source_root="services"
+		elif [[ -d "$ROOT_DIR/src" ]]; then
+			source_root="src"
+		fi
+		tests_root="tests"
+		if [[ -d "$ROOT_DIR/tests" ]]; then
+			tests_root="tests"
+		elif [[ -d "$ROOT_DIR/test" ]]; then
+			tests_root="test"
+		fi
+		FALLBACK_CONFIG="$(mktemp "${TMPDIR:-/tmp}/test-speed-guards-config.XXXXXX")"
+		cat >"$FALLBACK_CONFIG" <<JSON
+{
+  "source_root": "$source_root",
+  "tests_root": "$tests_root",
+  "tests_glob": "test_*.py",
+  "ignore_globs": [
+    "**/.git/**",
+    "**/*.md"
+  ],
+  "allowed_test_modules": [
+    "pytest",
+    "hypothesis",
+    "hypothesis.strategies",
+    "pydantic"
+  ],
+  "registry_modules": []
+}
+JSON
+		CONFIG_FILE="$FALLBACK_CONFIG"
+	fi
 fi
 
 report_file="$(mktemp "${TMPDIR:-/tmp}/test-speed-guards.XXXXXX")"
-trap 'rm -f "$report_file"' EXIT
+cleanup_files=("$report_file")
+if [[ -n "$FALLBACK_CONFIG" ]]; then
+	cleanup_files+=("$FALLBACK_CONFIG")
+fi
+trap 'rm -f "${cleanup_files[@]}"' EXIT
 
 python3 - "$CONFIG_FILE" "$ROOT_DIR" "$report_file" <<'PY'
 import ast, json, os, sys

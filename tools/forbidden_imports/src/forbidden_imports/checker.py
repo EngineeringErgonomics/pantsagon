@@ -8,6 +8,7 @@ import os
 import re
 import tomllib
 import yaml
+from typing import TypeGuard
 
 
 @dataclass(frozen=True)
@@ -29,38 +30,44 @@ class Config:
     languages: dict[str, LanguageRule]
 
 
+def _is_dict(value: object) -> TypeGuard[dict[object, object]]:
+    return isinstance(value, dict)
+
+
+def _is_list(value: object) -> TypeGuard[list[object]]:
+    return isinstance(value, list)
+
+
+def _as_dict(value: object) -> dict[str, object]:
+    if not _is_dict(value):
+        return {}
+    return {str(k): v for k, v in value.items()}
+
+
+def _as_str_list(value: object) -> list[str]:
+    if not _is_list(value):
+        return []
+    return [str(item) for item in value if item]
+
+
 def load_config(path: Path) -> Config:
-    data = yaml.safe_load(path.read_text()) or {}
+    data_raw: object = yaml.safe_load(path.read_text()) or {}
+    data = _as_dict(data_raw)
     languages: dict[str, LanguageRule] = {}
-    raw_languages = data.get("languages") or {}
-    if isinstance(raw_languages, dict):
-        for lang_name, lang_rules in raw_languages.items():
-            if not isinstance(lang_rules, dict):
-                continue
-            raw_exts = lang_rules.get("extensions") or []
-            extensions = [str(ext) for ext in raw_exts if ext]
-            layers: list[LayerRule] = []
-            raw_layers = lang_rules.get("layers") or {}
-            if isinstance(raw_layers, dict):
-                for layer_name, rules in raw_layers.items():
-                    if not isinstance(rules, dict):
-                        continue
-                    include = (
-                        list(rules.get("include", []))
-                        if isinstance(rules.get("include"), list)
-                        else []
-                    )
-                    deny = (
-                        list(rules.get("deny", []))
-                        if isinstance(rules.get("deny"), list)
-                        else []
-                    )
-                    layers.append(
-                        LayerRule(name=str(layer_name), include=include, deny=deny)
-                    )
-            languages[str(lang_name)] = LanguageRule(
-                name=str(lang_name), extensions=extensions, layers=layers
-            )
+    raw_languages = _as_dict(data.get("languages"))
+    for lang_name, lang_rules_raw in raw_languages.items():
+        lang_rules = _as_dict(lang_rules_raw)
+        extensions = _as_str_list(lang_rules.get("extensions"))
+        layers: list[LayerRule] = []
+        raw_layers = _as_dict(lang_rules.get("layers"))
+        for layer_name, rules_raw in raw_layers.items():
+            rules = _as_dict(rules_raw)
+            include = _as_str_list(rules.get("include"))
+            deny = _as_str_list(rules.get("deny"))
+            layers.append(LayerRule(name=str(layer_name), include=include, deny=deny))
+        languages[str(lang_name)] = LanguageRule(
+            name=str(lang_name), extensions=extensions, layers=layers
+        )
     return Config(languages=languages)
 
 
@@ -81,13 +88,15 @@ def load_languages(lock_path: Path) -> list[str]:
     if not lock_path.exists():
         return ["python"]
     try:
-        lock = tomllib.loads(lock_path.read_text(encoding="utf-8"))
+        raw = tomllib.loads(lock_path.read_text(encoding="utf-8"))
     except Exception:
         return ["python"]
-    selection = lock.get("selection") if isinstance(lock.get("selection"), dict) else {}
-    raw = selection.get("languages")
-    if isinstance(raw, list) and raw:
-        return [str(item) for item in raw]
+    data = _as_dict(raw)
+    selection = _as_dict(data.get("selection"))
+    raw_langs = selection.get("languages")
+    langs = _as_str_list(raw_langs)
+    if langs:
+        return langs
     return ["python"]
 
 

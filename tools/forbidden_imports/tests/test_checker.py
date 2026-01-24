@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from forbidden_imports.checker import load_config, scan_files
+import forbidden_imports.checker as checker
+from forbidden_imports.checker import load_config, load_languages, scan_files
 
 
 def test_ports_reject_framework_import(tmp_path: Path) -> None:
@@ -81,3 +82,10 @@ def test_go_rejects_import(tmp_path: Path) -> None:
     config = load_config(cfg)
     violations = scan_files(config, [bad], languages=["go"])
     assert violations, "Expected a violation for Go domain layer"
+
+
+def test_load_languages_handles_non_mapping_toml(tmp_path: Path, monkeypatch) -> None:
+    lock_path = tmp_path / ".pantsagon.toml"
+    lock_path.write_text("selection = 'oops'\n")
+    monkeypatch.setattr(checker.tomllib, "loads", lambda _: ["nope"])
+    assert load_languages(lock_path) == ["python"]

@@ -1,11 +1,12 @@
 from dataclasses import dataclass
-from typing import Any
+
+from pantsagon.domain.json_types import JsonDict
 
 
 @dataclass
 class AdapterError(Exception):
     message: str
-    details: dict[str, Any] | None = None
+    details: JsonDict | None = None
     hint: str | None = None
     cause: Exception | None = None
 

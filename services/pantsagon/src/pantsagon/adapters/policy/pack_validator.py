@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, cast
 
 import jsonschema
 import yaml
 
 from pantsagon.domain.diagnostics import Diagnostic, Severity, ValueLocation
+from pantsagon.domain.json_types import JsonDict, JsonValue, as_json_dict, as_json_list
 from pantsagon.domain.naming import (
     validate_feature_name,
     validate_pack_id as validate_pack_id_format,
@@ -16,7 +16,11 @@ from pantsagon.domain.naming import (
 from pantsagon.domain.result import Result
 from pantsagon.ports.policy_engine import PolicyEnginePort
 
-Manifest = dict[str, Any]
+Manifest = JsonDict
+
+
+def schema_path(root: Path | None = None) -> Path:
+    return _schema_path(root)
 
 
 def _schema_path(root: Path | None = None) -> Path:
@@ -29,22 +33,23 @@ SCHEMA_PATH = _schema_path()
 
 def load_manifest(pack_dir: Path) -> Manifest:
     raw: object = yaml.safe_load((pack_dir / "pack.yaml").read_text()) or {}
-    if isinstance(raw, dict):
-        return cast(Manifest, raw)
-    return {}
+    return as_json_dict(raw)
 
 
-def load_copier_vars(pack_dir: Path) -> dict[str, Any]:
+def load_copier_vars(pack_dir: Path) -> JsonDict:
     raw: object = yaml.safe_load((pack_dir / "copier.yml").read_text()) or {}
-    data: dict[str, Any] = cast(dict[str, Any], raw) if isinstance(raw, dict) else {}
-    return {k: v for k, v in data.items() if not k.startswith("_")}
+    data: JsonDict = {}
+    for key, value in as_json_dict(raw).items():
+        key_str = str(key)
+        if key_str.startswith("_"):
+            continue
+        data[key_str] = value
+    return data
 
 
 def validate_manifest_schema(manifest: Manifest) -> list[Diagnostic]:
     schema_raw = json.loads(SCHEMA_PATH.read_text())
-    schema: dict[str, Any] = (
-        cast(dict[str, Any], schema_raw) if isinstance(schema_raw, dict) else {}
-    )
+    schema = as_json_dict(schema_raw)
     try:
         jsonschema.validate(manifest, schema)
         return []
@@ -59,10 +64,18 @@ def validate_manifest_schema(manifest: Manifest) -> list[Diagnostic]:
         ]
 
 
-def _copier_default(value: Any) -> Any | None:
+def _copier_default(value: JsonValue) -> JsonValue | None:
     if isinstance(value, dict):
         return value.get("default")
     return value
+
+
+def _variables_list(manifest: Manifest) -> list[JsonDict]:
+    variables: list[JsonDict] = []
+    for item in as_json_list(manifest.get("variables")):
+        if isinstance(item, dict):
+            variables.append(as_json_dict(item))
+    return variables
 
 
 def validate_pack_id(manifest: Manifest) -> list[Diagnostic]:
@@ -74,33 +87,25 @@ def validate_pack_id(manifest: Manifest) -> list[Diagnostic]:
 
 def validate_feature_names(manifest: Manifest) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
-    provides = manifest.get("provides", {}) or {}
-    features = provides.get("features", []) or []
-    for feature in features:
-        diagnostics.extend(validate_feature_name(str(feature)))
+    provides = manifest.get("provides")
+    if isinstance(provides, dict):
+        features = provides.get("features")
+        if isinstance(features, list):
+            for feature in features:
+                diagnostics.extend(validate_feature_name(str(feature)))
     return diagnostics
 
 
 def validate_variable_names(manifest: Manifest) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
-    raw_variables: object = manifest.get("variables", [])
-    if isinstance(raw_variables, list):
-        for item in cast(list[object], raw_variables):
-            if isinstance(item, dict):
-                name = str(item.get("name", ""))
-                diagnostics.extend(validate_variable_name(name))
+    for item in _variables_list(manifest):
+        name = str(item.get("name", ""))
+        diagnostics.extend(validate_variable_name(name))
     return diagnostics
 
 
-def crosscheck_variables(
-    manifest: Manifest, copier_vars: dict[str, Any]
-) -> list[Diagnostic]:
-    raw_variables: object = manifest.get("variables", [])
-    variables: list[dict[str, Any]] = []
-    if isinstance(raw_variables, list):
-        for item in cast(list[object], raw_variables):
-            if isinstance(item, dict):
-                variables.append(cast(dict[str, Any], item))
+def crosscheck_variables(manifest: Manifest, copier_vars: JsonDict) -> list[Diagnostic]:
+    variables = _variables_list(manifest)
     declared = {str(v.get("name")) for v in variables if v.get("name") is not None}
     diagnostics: list[Diagnostic] = []
     undeclared = set(copier_vars.keys()) - declared
@@ -116,12 +121,10 @@ def crosscheck_variables(
         )
     for name in sorted(declared):
         pack_default = None
-        raw_variables: object = manifest.get("variables", [])
-        if isinstance(raw_variables, list):
-            for item in cast(list[object], raw_variables):
-                if isinstance(item, dict) and item.get("name") == name:
-                    pack_default = item.get("default")
-                    break
+        for item in variables:
+            if item.get("name") == name:
+                pack_default = item.get("default")
+                break
         copier_default = (
             _copier_default(copier_vars.get(name)) if name in copier_vars else None
         )

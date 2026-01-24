@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 import shutil
-from typing import Any, Iterable
+from typing import Iterable
 
 from pantsagon.domain.diagnostics import Diagnostic, Severity
+from pantsagon.domain.json_types import JsonDict
 from pantsagon.domain.pack import PackRef
 from pantsagon.ports.pack_catalog import PackCatalogPort
 from pantsagon.ports.policy_engine import PolicyEnginePort
@@ -18,7 +19,7 @@ OPENAPI_SHARED_FILES = {
 }
 
 
-def is_service_pack(manifest: dict[str, Any] | None) -> bool:
+def is_service_pack(manifest: JsonDict | None) -> bool:
     if not isinstance(manifest, dict):
         return False
     raw_vars = manifest.get("variables")
@@ -68,7 +69,7 @@ def render_bundled_packs(
     stage_dir: Path,
     repo_path: Path,
     pack_ids: Iterable[str],
-    answers: dict[str, str],
+    answers: JsonDict,
     *,
     catalog: PackCatalogPort,
     renderer: RendererPort,

@@ -4,6 +4,7 @@ import keyword
 import re
 
 from pantsagon.domain.diagnostics import Diagnostic, Severity, ValueLocation
+from pantsagon.domain.json_types import as_json_dict
 
 SERVICE_PATTERN = re.compile(r"^[a-z](?:[a-z0-9]*(-[a-z0-9]+)*)$")
 PACK_ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$")
@@ -54,7 +55,7 @@ def validate_service_name(
                 severity=Severity.ERROR,
                 message=f"Service name is reserved: {name}",
                 location=ValueLocation("service", name),
-                details={"scope": "builtin"},
+                details=as_json_dict({"scope": "builtin"}),
             )
         )
     if name in project:
@@ -65,7 +66,7 @@ def validate_service_name(
                 severity=Severity.ERROR,
                 message=f"Service name is reserved: {name}",
                 location=ValueLocation("service", name),
-                details={"scope": "project"},
+                details=as_json_dict({"scope": "project"}),
             )
         )
     return diagnostics

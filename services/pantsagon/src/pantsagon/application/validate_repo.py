@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 import os
-from typing import Any
 
 import yaml
+from typing import TypeGuard
 
 from pantsagon.application.pack_index import load_pack_index, resolve_pack_ids
 from pantsagon.application.repo_lock import (
+    LockDict,
     effective_strict,
     project_reserved_services,
     read_lock,
@@ -18,12 +19,19 @@ from pantsagon.domain.diagnostics import (
     Severity,
     ValueLocation,
 )
+from pantsagon.domain.json_types import (
+    JsonDict,
+    JsonValue,
+    as_json_dict,
+    as_json_list,
+)
 from pantsagon.domain.naming import (
     BUILTIN_RESERVED_SERVICES,
     validate_feature_name,
     validate_pack_id,
     validate_service_name,
 )
+from pantsagon.domain.pack import PackSource
 from pantsagon.domain.result import Result
 from pantsagon.domain.strictness import apply_strictness
 from pantsagon.ports.policy_engine import PolicyEnginePort
@@ -51,16 +59,28 @@ def _bundled_pack_path(pack_id: str) -> Path:
     return _bundled_packs_root() / pack_id.split(".")[-1]
 
 
-def _get_list(value: Any) -> list[Any]:
-    return list(value) if isinstance(value, list) else []
+def _get_list(value: object) -> list[JsonValue]:
+    return as_json_list(value)
 
 
-def _load_manifest(pack_path: Path) -> dict[str, Any]:
+def _as_dict(value: object) -> JsonDict:
+    return as_json_dict(value)
+
+
+def _is_pack_source(value: object) -> TypeGuard[PackSource]:
+    return isinstance(value, str) and value in {"bundled", "local", "git", "registry"}
+
+
+def _coerce_pack_source(value: object) -> PackSource | None:
+    return value if _is_pack_source(value) else None
+
+
+def _load_manifest(pack_path: Path) -> JsonDict:
     try:
         raw: object = yaml.safe_load((pack_path / "pack.yaml").read_text()) or {}
     except FileNotFoundError:
         return {}
-    return raw if isinstance(raw, dict) else {}
+    return as_json_dict(raw)
 
 
 def _maybe_warn_feature_shadow(feature: str, pack_ids: set[str]) -> Diagnostic | None:
@@ -88,9 +108,9 @@ def validate_repo(
     if lock_result.value is None:
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
-    lock = lock_result.value
-    resolved = lock.get("resolved")
-    if not isinstance(resolved, dict):
+    lock: LockDict = lock_result.value
+    resolved_raw = lock.get("resolved")
+    if not isinstance(resolved_raw, dict):
         diagnostics.append(
             Diagnostic(
                 code="LOCK_SECTION_MISSING",
@@ -101,6 +121,7 @@ def validate_repo(
         )
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
+    resolved = _as_dict(resolved_raw)
     raw_packs = resolved.get("packs")
     packs = _get_list(raw_packs)
     if not packs:
@@ -115,7 +136,7 @@ def validate_repo(
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
 
     pack_ids: list[str] = []
-    pack_entries: list[dict[str, Any]] = []
+    pack_entries: list[JsonDict] = []
     seen: set[str] = set()
     for entry in packs:
         if not isinstance(entry, dict):
@@ -128,10 +149,11 @@ def validate_repo(
                 )
             )
             continue
-        pack_id = entry.get("id")
-        version = entry.get("version")
-        source = entry.get("source")
-        if not pack_id or not version or not source:
+        entry_dict = as_json_dict(entry)
+        pack_id_raw = entry_dict.get("id")
+        version_raw = entry_dict.get("version")
+        source = _coerce_pack_source(entry_dict.get("source"))
+        if not pack_id_raw or not version_raw or source is None:
             diagnostics.append(
                 Diagnostic(
                     code="LOCK_PACK_INVALID",
@@ -141,7 +163,7 @@ def validate_repo(
                 )
             )
             continue
-        pack_id = str(pack_id)
+        pack_id = str(pack_id_raw)
         diagnostics.extend(validate_pack_id(pack_id))
         if pack_id in seen:
             diagnostics.append(
@@ -155,7 +177,9 @@ def validate_repo(
             continue
         seen.add(pack_id)
         pack_ids.append(pack_id)
-        pack_entries.append(entry)
+        entry_out = dict(entry_dict)
+        entry_out["source"] = source
+        pack_entries.append(entry_out)
 
     if any(d.severity == Severity.ERROR for d in diagnostics):
         return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))
@@ -163,7 +187,18 @@ def validate_repo(
     pack_id_set = set(pack_ids)
     for entry in pack_entries:
         pack_id = str(entry.get("id"))
-        source = str(entry.get("source"))
+        source_raw = entry.get("source")
+        if not _is_pack_source(source_raw):
+            diagnostics.append(
+                Diagnostic(
+                    code="LOCK_PACK_INVALID",
+                    rule="lock.resolved.packs",
+                    severity=Severity.ERROR,
+                    message=f"Unsupported pack source: {source_raw}",
+                )
+            )
+            continue
+        source = source_raw
         pack_path: Path | None = None
         if source == "bundled":
             pack_path = _bundled_pack_path(pack_id)
@@ -216,7 +251,7 @@ def validate_repo(
             )
             continue
 
-        manifest: dict[str, Any] = {}
+        manifest: JsonDict = {}
         if policy_engine is not None:
             manifest_result = policy_engine.validate_pack(pack_path)
             diagnostics.extend(manifest_result.diagnostics)
@@ -236,7 +271,8 @@ def validate_repo(
                 )
             )
         elif isinstance(compatibility, dict):
-            pants_req = compatibility.get("pants")
+            compat_dict = _as_dict(compatibility)
+            pants_req = compat_dict.get("pants")
             if pants_req is not None and not isinstance(pants_req, str):
                 diagnostics.append(
                     Diagnostic(
@@ -247,24 +283,19 @@ def validate_repo(
                     )
                 )
 
-        provides = manifest.get("provides")
-        if isinstance(provides, dict):
-            raw_features = provides.get("features")
-            for feature in _get_list(raw_features):
-                diagnostics.extend(validate_feature_name(str(feature)))
-                shadow = _maybe_warn_feature_shadow(str(feature), pack_id_set)
-                if shadow:
-                    diagnostics.append(shadow)
+        provides_dict = _as_dict(manifest.get("provides"))
+        raw_features = provides_dict.get("features")
+        for feature in _get_list(raw_features):
+            diagnostics.extend(validate_feature_name(str(feature)))
+            shadow = _maybe_warn_feature_shadow(str(feature), pack_id_set)
+            if shadow:
+                diagnostics.append(shadow)
 
-        requires = []
-        requires_block = manifest.get("requires")
-        if isinstance(requires_block, dict):
-            raw_requires = requires_block.get("packs")
-            requires = (
-                [str(item) for item in raw_requires]
-                if isinstance(raw_requires, list)
-                else []
-            )
+        requires: list[str] = []
+        requires_dict = _as_dict(manifest.get("requires"))
+        raw_requires = requires_dict.get("packs")
+        if isinstance(raw_requires, list):
+            requires = [str(item) for item in raw_requires]
         for req in requires:
             if req not in pack_ids:
                 diagnostics.append(
@@ -276,10 +307,9 @@ def validate_repo(
                     )
                 )
 
-    selection = lock.get("selection") if isinstance(lock.get("selection"), dict) else {}
-    services = (
-        _get_list(selection.get("services")) if isinstance(selection, dict) else []
-    )
+    selection_raw = lock.get("selection")
+    selection = _as_dict(selection_raw)
+    services = _get_list(selection.get("services"))
     reserved = project_reserved_services(lock)
     for svc in services:
         svc_name = str(svc)
@@ -312,34 +342,33 @@ def validate_repo(
                         )
                     )
 
-    if isinstance(selection, dict):
-        languages = [str(item) for item in _get_list(selection.get("languages"))]
-        features = [str(item) for item in _get_list(selection.get("features"))]
-        for feature in features:
-            diagnostics.extend(validate_feature_name(feature))
-            shadow = _maybe_warn_feature_shadow(feature, pack_id_set)
-            if shadow:
-                diagnostics.append(shadow)
-        index_path = _bundled_packs_root() / "_index.json"
-        if index_path.exists():
-            index = load_pack_index(index_path)
-            selection_result = resolve_pack_ids(
-                index, languages=languages, features=features
-            )
-            diagnostics.extend(selection_result.diagnostics)
-            expected = set(selection_result.value or [])
-            if expected:
-                missing = sorted(expected - set(pack_ids))
-                extra = sorted(set(pack_ids) - expected)
-                if missing or extra:
-                    diagnostics.append(
-                        Diagnostic(
-                            code="LOCK_SELECTION_MISMATCH",
-                            rule="lock.selection",
-                            severity=Severity.WARN,
-                            message="Selection does not match resolved pack set",
-                            details={"missing": missing, "extra": extra},
-                        )
+    languages = [str(item) for item in _get_list(selection.get("languages"))]
+    features = [str(item) for item in _get_list(selection.get("features"))]
+    for feature in features:
+        diagnostics.extend(validate_feature_name(feature))
+        shadow = _maybe_warn_feature_shadow(feature, pack_id_set)
+        if shadow:
+            diagnostics.append(shadow)
+    index_path = _bundled_packs_root() / "_index.json"
+    if index_path.exists():
+        index = load_pack_index(index_path)
+        selection_result = resolve_pack_ids(
+            index, languages=languages, features=features
+        )
+        diagnostics.extend(selection_result.diagnostics)
+        expected = set(selection_result.value or [])
+        if expected:
+            missing = sorted(expected - set(pack_ids))
+            extra = sorted(set(pack_ids) - expected)
+            if missing or extra:
+                diagnostics.append(
+                    Diagnostic(
+                        code="LOCK_SELECTION_MISMATCH",
+                        rule="lock.selection",
+                        severity=Severity.WARN,
+                        message="Selection does not match resolved pack set",
+                        details=as_json_dict({"missing": missing, "extra": extra}),
                     )
+                )
 
     return Result(diagnostics=apply_strictness(diagnostics, strict_enabled))

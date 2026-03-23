@@ -10,7 +10,6 @@ from pantsagon.adapters.workspace.filesystem import FilesystemWorkspace
 from pantsagon.application.add_service import add_service
 from pantsagon.application.repo_lock import read_lock, write_lock
 
-
 pytestmark = pytest.mark.skipif(
     importlib.util.find_spec("copier") is None,
     reason="copier not installed",
@@ -19,7 +18,7 @@ pytestmark = pytest.mark.skipif(
 
 def _repo_root() -> Path:
     for parent in Path(__file__).resolve().parents:
-        if (parent / "packs").is_dir():
+        if (parent / "pants.toml").is_file() and (parent / "packs").is_dir():
             return parent
     raise RuntimeError("Could not locate repo root")
 

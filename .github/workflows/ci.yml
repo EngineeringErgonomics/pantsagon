@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Init Pants
-        uses: pantsbuild/actions/init-pants@v10
+        uses: pantsbuild/actions/init-pants@v11
         with:
           named-caches-hash: ${{ hashFiles('3rdparty/python/requirements.txt', 'docs/requirements.txt') }}
       - name: Pants test

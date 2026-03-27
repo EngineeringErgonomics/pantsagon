@@ -20,7 +20,9 @@ class FilesystemWorkspace:
         created_files: list[Path] = []
         created_dirs: list[Path] = []
         overwritten_files: dict[Path, Path] = {}
-        backup_root = Path(tempfile.mkdtemp(prefix="pantsagon-backup-", dir=self.root.parent))
+        backup_root = Path(
+            tempfile.mkdtemp(prefix="pantsagon-backup-", dir=self.root.parent)
+        )
         try:
             for path in stage.rglob("*"):
                 rel = path.relative_to(stage)

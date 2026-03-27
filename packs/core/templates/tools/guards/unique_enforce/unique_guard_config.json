@@ -1,0 +1,11 @@
+{
+  "ignore_globs": [
+    "**/.git/**",
+    "**/__pycache__/**",
+    "**/*.md",
+    "**/.cache/**"
+  ],
+  "allow_module_globs": [
+  ],
+  "roots_override": []
+}

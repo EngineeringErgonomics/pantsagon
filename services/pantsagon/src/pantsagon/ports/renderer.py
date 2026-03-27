@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Protocol
 
+from pantsagon.domain.json_types import JsonDict
 from pantsagon.domain.pack import PackRef
 
 
@@ -10,7 +11,7 @@ class RenderRequest:
     pack: PackRef
     pack_path: Path
     staging_dir: Path
-    answers: dict[str, Any]
+    answers: JsonDict
     allow_hooks: bool
 
 

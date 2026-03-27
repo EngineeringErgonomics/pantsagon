@@ -15,7 +15,6 @@ Single source of truth for a Pantsagon-generated repository.
 | `resolved` | `object` | yes |  |
 | `selection` | `object` | no |  |
 | `settings` | `object` | no |  |
-| `tool` | `object` | yes |  |
 
 ## Raw JSON
 
@@ -153,28 +152,9 @@ Single source of truth for a Pantsagon-generated repository.
         }
       },
       "type": "object"
-    },
-    "tool": {
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "const": "pantsagon",
-          "type": "string"
-        },
-        "version": {
-          "description": "Pantsagon tool version used to generate or update this repo.",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "version"
-      ],
-      "type": "object"
     }
   },
   "required": [
-    "tool",
     "resolved"
   ],
   "title": "Pantsagon Repo Lock (.pantsagon.toml) (v1)",

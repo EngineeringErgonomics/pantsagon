@@ -23,7 +23,7 @@ Pantsagon bakes hard boundaries into the bootstrap so services stay clean as the
 - Pack index resolution via `packs/_index.json` (languages/features → pack ids)
 - Schema validation and manifest ↔ Copier cross‑checks
 - Structured diagnostics + stable exit codes (`--json` on `init`, `add-service`, `validate`)
-- Bundled packs: `core`, `python`, `openapi`, `docker` (minimal scaffolds)
+- Bundled packs: `core`, `python`, `typescript`, `rust`, `go`, `openapi`, `docker` (minimal scaffolds)
 - Pack validation tool: `python -m pantsagon.tools.validate_packs --bundled`
 - Deterministic mode for tests (`PANTSAGON_DETERMINISTIC=1`)
 - Optional augmented‑coding files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`)
@@ -31,11 +31,8 @@ Pantsagon bakes hard boundaries into the bootstrap so services stay clean as the
 ## Quick start (from source)
 
 ```bash
-# inside this repo
-python -m pip install -e .
-
-# initialize a repo
-pantsagon init /path/to/my-repo \
+# inside this repo (requires `pants` on PATH; see pants.toml for version)
+pants run services/pantsagon:cli -- init /path/to/my-repo \
   --lang python \
   --services monitors,governance \
   --feature openapi \
@@ -58,13 +55,9 @@ mkdocs serve
 
 ## Repo lock (.pantsagon.toml)
 
-The repo lock captures tool version, selection, and resolved packs/answers:
+The repo lock captures selection and resolved packs/answers:
 
 ```toml
-[tool]
-name = "pantsagon"
-version = "1.0.0"
-
 [settings]
 renderer = "copier"
 strict = false
@@ -90,17 +83,17 @@ service_name = "monitors"
 ## CLI (v1)
 
 ```bash
-pantsagon init <repo> \
+pants run services/pantsagon:cli -- init <repo> \
   --lang python \
   --services a,b \
   --feature openapi --feature docker \
   --augmented-coding {agents|claude|gemini|none}
 
-pantsagon add-service <name> \
+pants run services/pantsagon:cli -- add-service <name> \
   --lang python \
   --strict
 
-pantsagon validate --json --strict
+pants run services/pantsagon:cli -- validate --json --strict
 ```
 
 Notes:
@@ -149,6 +142,9 @@ my-repo/
   pants.toml
   .pantsagon.toml
   .github/workflows/ci.yml
+  .githooks/
+    pre-commit
+    pre-push
   services/
     monitor-cost/
       BUILD
@@ -168,9 +164,16 @@ my-repo/
         monitor-cost.yaml
   docs/
     README.md
+    dev/
+      hexagonal-dev-guide.md
+  mkdocs.yml
+  .ruff.toml
+  pyrightconfig.json
   tools/
     forbidden_imports/
       README.md
+    guards/
+      pre-commit.sh
   3rdparty/
     python/
       requirements.txt
@@ -200,7 +203,7 @@ The core is split into:
 Run tests:
 
 ```bash
-pytest -q
+pants test ::
 ```
 
 Pack validation:

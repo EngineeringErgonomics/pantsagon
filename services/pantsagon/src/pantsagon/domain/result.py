@@ -1,16 +1,27 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from pantsagon.domain.diagnostics import Diagnostic, Severity
+from pantsagon.domain.json_types import JsonDict
 
 T = TypeVar("T")
+
+
+def _new_diagnostics() -> list[Diagnostic]:
+    return []
+
+
+def _new_artifacts() -> list[JsonDict]:
+    return []
 
 
 @dataclass
 class Result(Generic[T]):
     value: T | None = None
-    diagnostics: list[Diagnostic] = field(default_factory=list)
-    artifacts: list[dict[str, Any]] = field(default_factory=list)
+    diagnostics: list[Diagnostic] = field(default_factory=_new_diagnostics)
+    artifacts: list[JsonDict] = field(default_factory=_new_artifacts)
 
     @property
     def exit_code(self) -> int:

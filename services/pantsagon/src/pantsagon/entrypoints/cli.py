@@ -62,7 +62,10 @@ def init(
     workspace = FilesystemWorkspace(repo)
     if json:
         with open(os.devnull, "w", encoding="utf-8") as devnull:
-            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(devnull):
+            with (
+                contextlib.redirect_stdout(devnull),
+                contextlib.redirect_stderr(devnull),
+            ):
                 result = init_repo(
                     repo,
                     [lang],
@@ -121,7 +124,10 @@ def add_service(
     workspace = FilesystemWorkspace(Path("."))
     if json:
         with open(os.devnull, "w", encoding="utf-8") as devnull:
-            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(devnull):
+            with (
+                contextlib.redirect_stdout(devnull),
+                contextlib.redirect_stderr(devnull),
+            ):
                 result = add_service_use_case(
                     Path("."),
                     name=name,

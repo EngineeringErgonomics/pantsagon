@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 import hashlib
-from typing import Any
+from pantsagon.domain.json_types import JsonDict
 
 
 class Severity(str, Enum):
@@ -49,7 +49,7 @@ class Diagnostic:
     message: str
     location: Location | None = None
     hint: str | None = None
-    details: dict[str, Any] | None = None
+    details: JsonDict | None = None
     is_execution: bool = False
     upgradeable: bool = False
     id: str = field(init=False)

@@ -1,5 +1,4 @@
 import tomllib
-from pathlib import Path
 
 import tomli_w
 
@@ -19,7 +18,13 @@ def test_validate_repo_invalid_lock(tmp_path):
 
 
 def test_validate_repo_missing_service_dir(tmp_path):
-    init_repo(repo_path=tmp_path, languages=["python"], services=["missing"], features=[], renderer="copier")
+    init_repo(
+        repo_path=tmp_path,
+        languages=["python"],
+        services=["missing"],
+        features=[],
+        renderer="copier",
+    )
     svc_dir = tmp_path / "services" / "missing"
     if svc_dir.exists():
         for path in sorted(svc_dir.rglob("*"), reverse=True):
@@ -33,7 +38,13 @@ def test_validate_repo_missing_service_dir(tmp_path):
 
 
 def test_validate_repo_pack_not_found(tmp_path):
-    init_repo(repo_path=tmp_path, languages=["python"], services=["svc"], features=[], renderer="copier")
+    init_repo(
+        repo_path=tmp_path,
+        languages=["python"],
+        services=["svc"],
+        features=[],
+        renderer="copier",
+    )
     lock_path = tmp_path / ".pantsagon.toml"
     lock = tomllib.loads(lock_path.read_text(encoding="utf-8"))
     lock["resolved"]["packs"][0]["id"] = "pantsagon.missing"

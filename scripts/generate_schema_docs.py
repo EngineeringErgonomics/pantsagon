@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import TypeGuard
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -15,8 +15,29 @@ SCHEMA_MAP = {
 }
 
 
-def _load_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+def _is_dict(value: object) -> TypeGuard[dict[object, object]]:
+    return isinstance(value, dict)
+
+
+def _is_list(value: object) -> TypeGuard[list[object]]:
+    return isinstance(value, list)
+
+
+def _as_dict(value: object) -> dict[str, object]:
+    if not _is_dict(value):
+        return {}
+    return {str(k): v for k, v in value.items()}
+
+
+def _as_list(value: object) -> list[object]:
+    if not _is_list(value):
+        return []
+    return list(value)
+
+
+def _load_json(path: Path) -> dict[str, object]:
+    raw: object = json.loads(path.read_text(encoding="utf-8"))
+    return _as_dict(raw)
 
 
 def _md_escape(s: str) -> str:
@@ -32,17 +53,18 @@ def _render_generated_notice(command: str) -> str:
     )
 
 
-def _render_schema_overview(schema: dict[str, Any]) -> str:
-    title = schema.get("title") or "Schema"
-    desc = schema.get("description") or ""
-    schema_id = schema.get("$id") or ""
-    schema_version = schema.get("$schema") or ""
+def _render_schema_overview(schema: dict[str, object]) -> str:
+    title = str(schema.get("title") or "Schema")
+    desc_raw = schema.get("description")
+    desc = str(desc_raw).strip() if desc_raw else ""
+    schema_id = str(schema.get("$id") or "")
+    schema_version = str(schema.get("$schema") or "")
 
     lines: list[str] = []
     lines.append(f"# {_md_escape(title)}")
     if desc:
         lines.append("")
-        lines.append(desc.strip())
+        lines.append(desc)
     if schema_id or schema_version:
         lines.append("")
         if schema_id:
@@ -52,9 +74,12 @@ def _render_schema_overview(schema: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _render_properties(schema: dict[str, Any]) -> str:
-    props: dict[str, Any] = schema.get("properties") or {}
-    required: set[str] = set(schema.get("required") or [])
+def _render_properties(schema: dict[str, object]) -> str:
+    raw_props = schema.get("properties")
+    props = _as_dict(raw_props)
+    raw_required = schema.get("required")
+    required_items = _as_list(raw_required)
+    required: set[str] = {str(item) for item in required_items}
 
     if not props:
         return "## Properties\n\n(No top-level properties declared.)"
@@ -66,13 +91,17 @@ def _render_properties(schema: dict[str, Any]) -> str:
     lines.append("|---|---|---:|---|")
 
     for name in sorted(props.keys()):
-        p = props[name] or {}
+        raw_prop = props[name]
+        p = _as_dict(raw_prop)
         p_type = p.get("type")
-        if isinstance(p_type, list):
-            type_str = " | ".join(str(t) for t in p_type)
+        type_items = _as_list(p_type)
+        if type_items:
+            type_str = " | ".join(str(t) for t in type_items)
+        elif isinstance(p_type, list):
+            type_str = "(unspecified)"
         else:
             type_str = str(p_type) if p_type is not None else "(unspecified)"
-        desc = (p.get("description") or "").strip().replace("\n", " ")
+        desc = str(p.get("description") or "").strip().replace("\n", " ")
         lines.append(
             f"| `{name}` | `{type_str}` | {'yes' if name in required else 'no'} | {desc} |"
         )
@@ -80,7 +109,7 @@ def _render_properties(schema: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _render_raw(schema: dict[str, Any]) -> str:
+def _render_raw(schema: dict[str, object]) -> str:
     pretty = json.dumps(schema, indent=2, sort_keys=True)
     return "## Raw JSON\n\n```json\n" + pretty + "\n```\n"
 

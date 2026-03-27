@@ -1,9 +1,9 @@
 __dependents_rules__(
-  ("*", "*"),
+    ("*", "*"),
 )
 
 resources(
-  name="schemas",
-  sources=["schemas/**/*.json"],
-  tags=["shared:contracts"],
+    name="schemas",
+    sources=["schemas/**/*.json"],
+    tags=["shared:contracts"],
 )

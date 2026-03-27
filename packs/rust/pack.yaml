@@ -1,0 +1,16 @@
+schema_version: 1
+id: pantsagon.rust
+version: 1.0.0
+description: Rust service skeleton
+compatibility:
+  pants: ">=2.30.0"
+  languages:
+    rust: ">=1.70"
+requires:
+  packs:
+    - pantsagon.core
+variables:
+  - name: service_name
+    type: string
+  - name: service_pkg
+    type: string

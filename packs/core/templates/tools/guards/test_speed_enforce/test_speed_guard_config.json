@@ -1,0 +1,20 @@
+{
+  "source_root": "services",
+  "tests_roots": [
+    "tests"
+  ],
+  "tests_glob": "test_*.py",
+  "ignore_globs": [
+    "**/.git/**",
+    "**/*.md"
+  ],
+  "allowed_test_modules": [
+    "pytest",
+    "hypothesis",
+    "hypothesis.strategies",
+    "pydantic"
+  ],
+  "registry_modules": [
+
+  ]
+}
